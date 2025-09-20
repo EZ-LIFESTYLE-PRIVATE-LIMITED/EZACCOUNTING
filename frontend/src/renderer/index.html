@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EZAccounting</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .app-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            background: white;
+            margin: 10px;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px 10px 0 0;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 30px;
+            overflow-y: auto;
+        }
+
+        .status-card {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status-connected {
+            background-color: #28a745;
+            box-shadow: 0 0 10px rgba(40, 167, 69, 0.5);
+        }
+
+        .status-disconnected {
+            background-color: #dc3545;
+            box-shadow: 0 0 10px rgba(220, 53, 69, 0.5);
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .feature-card {
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            transition: transform 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+
+        .feature-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+        }
+
+        .feature-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .feature-description {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .footer {
+            background: #f8f9fa;
+            padding: 15px;
+            text-align: center;
+            border-radius: 0 0 10px 10px;
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: opacity 0.2s;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="header">
+            <h1>🏦 EZAccounting</h1>
+            <p>Your Simple Desktop Accounting Solution</p>
+        </div>
+
+        <div class="main-content">
+            <div class="status-card">
+                <h3>System Status</h3>
+                <div id="backend-status">
+                    <span class="status-indicator status-disconnected" id="status-indicator"></span>
+                    <span id="status-text">Checking backend connection...</span>
+                </div>
+                <div class="loading" id="loading">
+                    <div class="spinner"></div>
+                    <p>Connecting to backend...</p>
+                </div>
+                <button id="refresh-btn" onclick="checkBackendConnection()" style="margin-top: 10px;">
+                    Refresh Connection
+                </button>
+            </div>
+
+            <div class="feature-grid">
+                <div class="feature-card" onclick="openFeature('transactions')">
+                    <div class="feature-icon">💳</div>
+                    <div class="feature-title">Transactions</div>
+                    <div class="feature-description">Manage your income and expenses</div>
+                </div>
+
+                <div class="feature-card" onclick="openFeature('accounts')">
+                    <div class="feature-icon">🏦</div>
+                    <div class="feature-title">Accounts</div>
+                    <div class="feature-description">Track multiple accounts and balances</div>
+                </div>
+
+                <div class="feature-card" onclick="openFeature('reports')">
+                    <div class="feature-icon">📊</div>
+                    <div class="feature-title">Reports</div>
+                    <div class="feature-description">Generate financial reports and insights</div>
+                </div>
+
+                <div class="feature-card" onclick="openFeature('settings')">
+                    <div class="feature-icon">⚙️</div>
+                    <div class="feature-title">Settings</div>
+                    <div class="feature-description">Configure your application preferences</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>EZAccounting Desktop v1.0.0 | Made with ❤️ and Electron</p>
+        </div>
+    </div>
+
+    <script>
+        // Check backend connection on load
+        window.addEventListener('DOMContentLoaded', () => {
+            checkBackendConnection();
+        });
+
+        async function checkBackendConnection() {
+            const statusIndicator = document.getElementById('status-indicator');
+            const statusText = document.getElementById('status-text');
+            const loading = document.getElementById('loading');
+            const refreshBtn = document.getElementById('refresh-btn');
+
+            loading.style.display = 'block';
+            refreshBtn.disabled = true;
+
+            try {
+                const result = await window.electronAPI.checkBackendConnection();
+                
+                if (result.connected) {
+                    statusIndicator.className = 'status-indicator status-connected';
+                    statusText.textContent = `Backend connected successfully (Uptime: ${Math.floor(result.data.uptime)}s)`;
+                } else {
+                    statusIndicator.className = 'status-indicator status-disconnected';
+                    statusText.textContent = `Backend connection failed: ${result.error}`;
+                }
+            } catch (error) {
+                statusIndicator.className = 'status-indicator status-disconnected';
+                statusText.textContent = `Error checking connection: ${error.message}`;
+            } finally {
+                loading.style.display = 'none';
+                refreshBtn.disabled = false;
+            }
+        }
+
+        function openFeature(feature) {
+            // This would open different views/panels based on the feature
+            alert(`Opening ${feature} feature...\n\nThis functionality will be implemented in the next version.`);
+        }
+    </script>
+</body>
+</html>
+
+
