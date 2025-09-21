@@ -5,8 +5,9 @@
   "main": "dist/main.js",
   "homepage": "./",
   "scripts": {
-    "build": "tsc && npm run copy-files",
-    "copy-files": "xcopy src\\renderer dist\\renderer /E /I /Y",
+    "build": "tsc && npm run copy-files-win",
+    "copy-files": "cp -r src/renderer dist/",
+    "copy-files-win": "xcopy src\\renderer dist\\renderer /E /I /Y",
     "start": "npm run build && electron dist/main.js",
     "start:dev": "npm run build && electron dist/main.js --dev",
     "dev": "ts-node src/main.ts",

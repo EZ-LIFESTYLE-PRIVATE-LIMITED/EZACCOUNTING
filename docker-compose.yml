@@ -11,23 +11,8 @@ services:
     networks:
       - app-network
 
-  frontend:
-    build: ./frontend
-    container_name: accounting-desktop
-    # Note: Electron apps don't need port exposure in Docker
-    # They run as desktop applications
-    depends_on:
-      - backend
-    networks:
-      - app-network
-    environment:
-      - NODE_ENV=development
-      - DISPLAY=${DISPLAY}
-    volumes:
-      # Mount the source code for development
-      - ./frontend/src:/app/src
-      # Allow access to X11 for GUI (Linux)
-      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+  # Frontend service removed - Electron desktop apps should run locally
+  # Use: cd frontend && npm run start:dev
 
   postgres:
     image: postgres:15
