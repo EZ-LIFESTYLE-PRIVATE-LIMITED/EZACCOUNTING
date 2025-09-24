@@ -1,0 +1,73 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum OrgType {
+  BUSINESS
+  CUSTOMER
+  SUPPLIER
+}
+
+model Organization {
+  id            Int       @id @default(autoincrement())
+  name          String
+  gstin         String?
+  state         String?
+  email         String?
+  phone         String?
+  signatureUrl  String?
+  orgType       OrgType   @default(BUSINESS)
+  invoices      Invoice[]
+}
+
+model Invoice {
+  invoiceId     Int           @id @default(autoincrement())
+  invoiceNumber Int
+  orgId         Int
+  organization  Organization  @relation(fields: [orgId], references: [id])
+  invoiceDate   DateTime
+  dueDate       DateTime
+  status        Int
+  totalAmount   Decimal
+  gstAmount     Decimal
+  netAmount     Decimal
+  items         InvoiceItem[]
+}
+
+model Item {
+  id            Int            @id @default(autoincrement())
+  name          String
+  description   String?
+  sku           String?
+  gst           Decimal
+  category      String?
+  invoiceItems  InvoiceItem[]
+}
+
+model InvoiceItem {
+  invoiceItemId     Int      @id @default(autoincrement())
+  invoiceId         Int
+  itemId            Int
+  quantity          Int
+  itemTotalAmount   Decimal
+  itemGstAmount     Decimal
+  itemIgstAmount    Decimal
+  itemCgstAmount    Decimal
+  itemSgstAmount    Decimal
+  itemNetAmount     Decimal
+
+  invoice           Invoice  @relation(fields: [invoiceId], references: [invoiceId])
+  item              Item     @relation(fields: [itemId], references: [id])
+
+  @@index([invoiceId])
+  @@index([itemId])
+}
