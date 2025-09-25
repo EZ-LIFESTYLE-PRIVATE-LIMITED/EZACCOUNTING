@@ -204,3 +204,6 @@ Icon
 
 # Project specific
 # Add any project-specific files to ignore here
+
+# Prisma generated client (moved from backend/.gitignore)
+backend/src/generated/prisma/
