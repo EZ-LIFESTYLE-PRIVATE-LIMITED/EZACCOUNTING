@@ -277,6 +277,64 @@ CREATE TABLE transactions (
 - ✅ Set Windows target to `dir` for unpacked distribution
 - ✅ **Fixed duplicate IPC handler error** - Removed duplicate `get-backend-url` handler
 
+### Industrial-Level Project Refactoring (Latest - 2025-01-25):
+- **Scope**: Complete project restructure following enterprise-level practices
+- **New Structure**:
+  ```
+  frontend/src/
+  ├── main.ts                 # Electron main process (lifecycle only)
+  ├── preload.ts             # IPC bridge
+  ├── config/                # Configuration management
+  │   ├── index.ts          # Main config
+  │   ├── database.ts       # Database config
+  │   └── app.ts            # App config
+  ├── database/              # Database layer
+  │   ├── index.ts          # Database exports
+  │   ├── connection.ts     # Database connection
+  │   ├── models/           # Data models
+  │   │   ├── index.ts
+  │   │   ├── TestRecord.ts
+  │   │   ├── Account.ts
+  │   │   └── Transaction.ts
+  │   ├── migrations/       # Database migrations
+  │   │   ├── index.ts
+  │   │   ├── 000_migrations_table.sql
+  │   │   ├── 001_initial.sql
+  │   │   └── migration-runner.ts
+  │   └── services/         # Database services
+  │       ├── index.ts
+  │       ├── TestService.ts
+  │       ├── AccountService.ts
+  │       └── TransactionService.ts
+  ├── services/              # Business logic services
+  │   ├── index.ts
+  │   ├── BackendService.ts
+  │   └── ConfigService.ts
+  ├── pages/                 # UI pages
+  │   ├── index.ts
+  │   ├── HomePage.ts
+  │   └── components/
+  │       ├── StatusCard.ts
+  │       ├── DatabaseCard.ts
+  │       └── ConfigCard.ts
+  ├── utils/                 # Utility functions
+  │   ├── index.ts
+  │   └── logger.ts
+  └── types/                 # TypeScript definitions
+      ├── index.ts
+      ├── database.ts
+      └── config.ts
+  ```
+- **Benefits**:
+  - ✅ Separation of concerns
+  - ✅ Scalable architecture
+  - ✅ Maintainable codebase
+  - ✅ Professional structure
+  - ✅ Easy testing and debugging
+  - ✅ Database migrations system
+  - ✅ Service layer architecture
+  - ✅ Component-based UI structure
+
 ---
 
 *This memory bank will be updated with every change made to the project to maintain full traceability.*

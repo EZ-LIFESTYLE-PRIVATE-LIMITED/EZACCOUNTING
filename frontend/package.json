@@ -6,8 +6,8 @@
   "homepage": "./",
   "scripts": {
     "build": "tsc && npm run copy-files-win",
-    "copy-files": "cp -r src/renderer dist/",
-    "copy-files-win": "xcopy src\\renderer dist\\renderer /E /I /Y",
+    "copy-files": "cp -r src/renderer dist/ && cp -r src/database/migrations/*.sql dist/database/migrations/",
+    "copy-files-win": "xcopy src\\renderer dist\\renderer /E /I /Y && xcopy src\\database\\migrations\\*.sql dist\\database\\migrations\\ /Y",
     "start": "npm run build && electron dist/main.js",
     "start:dev": "npm run build && electron dist/main.js --dev",
     "dev": "ts-node src/main.ts",

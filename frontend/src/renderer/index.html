@@ -416,8 +416,8 @@
                 if (result.success) {
                     resultsContent.textContent = JSON.stringify({
                         message: 'Test records retrieved successfully!',
-                        count: result.records.length,
-                        records: result.records
+                        count: result.data.length,
+                        records: result.data
                     }, null, 2);
                 } else {
                     resultsContent.textContent = `Failed to get test records: ${result.error}`;

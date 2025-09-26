@@ -40,11 +40,49 @@ npm run pack
 ## Project Structure
 
 ```
-src/
-├── main.ts          # Main Electron process
-├── preload.ts       # Preload script for secure IPC
-└── renderer/
-    └── index.html   # Main UI (HTML/CSS/JS)
+  frontend/src/
+  ├── main.ts                 # Electron main process (lifecycle only)
+  ├── preload.ts             # IPC bridge
+  ├── config/                # Configuration management
+  │   ├── index.ts          # Main config
+  │   ├── database.ts       # Database config
+  │   └── app.ts            # App config
+  ├── database/              # Database layer
+  │   ├── index.ts          # Database exports
+  │   ├── connection.ts     # Database connection
+  │   ├── models/           # Data models
+  │   │   ├── index.ts
+  │   │   ├── TestRecord.ts
+  │   │   ├── Account.ts
+  │   │   └── Transaction.ts
+  │   ├── migrations/       # Database migrations
+  │   │   ├── index.ts
+  │   │   ├── 000_migrations_table.sql
+  │   │   ├── 001_initial.sql
+  │   │   └── migration-runner.ts
+  │   └── services/         # Database services
+  │       ├── index.ts
+  │       ├── TestService.ts
+  │       ├── AccountService.ts
+  │       └── TransactionService.ts
+  ├── services/              # Business logic services
+  │   ├── index.ts
+  │   ├── BackendService.ts
+  │   └── ConfigService.ts
+  ├── pages/                 # UI pages
+  │   ├── index.ts
+  │   ├── HomePage.ts
+  │   └── components/
+  │       ├── StatusCard.ts
+  │       ├── DatabaseCard.ts
+  │       └── ConfigCard.ts
+  ├── utils/                 # Utility functions
+  │   ├── index.ts
+  │   └── logger.ts
+  └── types/                 # TypeScript definitions
+      ├── index.ts
+      ├── database.ts
+      └── config.ts
 ```
 
 ## Features

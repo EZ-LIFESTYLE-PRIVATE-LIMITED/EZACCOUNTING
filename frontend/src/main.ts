@@ -1,15 +1,22 @@
 import { app, BrowserWindow, Menu, ipcMain, dialog } from 'electron';
 import * as path from 'path';
-import { databaseService } from './database';
-import { getAppConfig, getConfigInfo } from './config';
+import { databaseConnection } from './database/connection';
+import { TestService } from './database/services/TestService';
+import { getAppConfig } from './config/app';
+import { getDatabaseConfig } from './config/database';
+import { logger } from './utils/logger';
 
 // Keep a global reference of the window object
 let mainWindow: BrowserWindow | null = null;
+let testService: TestService | null = null;
 
-// Get configurable backend URL
-const config = getAppConfig();
-const BACKEND_URL = config.backendUrl;
+// Get application configuration
+const appConfig = getAppConfig();
+const databaseConfig = getDatabaseConfig();
 
+/**
+ * Create the main application window
+ */
 function createWindow(): void {
   // Create the browser window
   mainWindow = new BrowserWindow({
@@ -22,7 +29,7 @@ function createWindow(): void {
       contextIsolation: true,
       preload: path.join(__dirname, 'preload.js')
     },
-    icon: path.join(__dirname, '../assets/icon.png'), // Optional: add an icon
+    icon: path.join(__dirname, '../assets/icon.png'),
     titleBarStyle: 'default',
     show: false // Don't show until ready
   });
@@ -33,57 +40,55 @@ function createWindow(): void {
   // Show window when ready to prevent visual flash
   mainWindow.once('ready-to-show', () => {
     mainWindow?.show();
+    logger.info('Main window shown');
   });
 
   // Emitted when the window is closed
   mainWindow.on('closed', () => {
     mainWindow = null;
+    logger.info('Main window closed');
   });
 
   // Open DevTools in development
-  if (process.argv.includes('--dev')) {
+  if (appConfig.environment === 'development' || process.argv.includes('--dev')) {
     mainWindow.webContents.openDevTools();
   }
 }
 
-// This method will be called when Electron has finished initialization
-app.whenReady().then(async () => {
-  // Initialize database
+/**
+ * Initialize database and services
+ */
+async function initializeServices(): Promise<void> {
   try {
-    await databaseService.initialize();
-    await databaseService.createTables();
-    console.log('Database initialized successfully');
+    logger.info('Initializing database connection...');
+    await databaseConnection.initialize();
+    
+    // Initialize services
+    testService = new TestService(databaseConnection.getDatabase());
+    
+    logger.info('Services initialized successfully');
   } catch (error) {
-    console.error('Failed to initialize database:', error);
+    logger.error('Failed to initialize services:', error);
+    throw error;
   }
+}
 
-  createWindow();
-  createMenu();
-
-  app.on('activate', () => {
-    // On macOS, re-create a window when the dock icon is clicked
-    if (BrowserWindow.getAllWindows().length === 0) {
-      createWindow();
-    }
-  });
-});
-
-// Quit when all windows are closed
-app.on('window-all-closed', async () => {
-  // Close database connection before quitting
+/**
+ * Cleanup services before app exit
+ */
+async function cleanupServices(): Promise<void> {
   try {
-    await databaseService.close();
+    logger.info('Cleaning up services...');
+    await databaseConnection.close();
+    logger.info('Services cleaned up successfully');
   } catch (error) {
-    console.error('Error closing database:', error);
+    logger.error('Error during cleanup:', error);
   }
-  
-  // On macOS, keep app running even when all windows are closed
-  if (process.platform !== 'darwin') {
-    app.quit();
-  }
-});
+}
 
-// Create application menu
+/**
+ * Create application menu
+ */
 function createMenu(): void {
   const template: Electron.MenuItemConstructorOptions[] = [
     {
@@ -93,7 +98,6 @@ function createMenu(): void {
           label: 'New',
           accelerator: 'CmdOrCtrl+N',
           click: () => {
-            // Handle new file
             dialog.showMessageBox(mainWindow!, {
               type: 'info',
               title: 'New File',
@@ -114,8 +118,7 @@ function createMenu(): void {
             });
             
             if (!result.canceled && result.filePaths.length > 0) {
-              // Handle file opening
-              console.log('Selected file:', result.filePaths[0]);
+              logger.info('Selected file:', result.filePaths[0]);
             }
           }
         },
@@ -164,7 +167,7 @@ function createMenu(): void {
               type: 'info',
               title: 'About EZAccounting',
               message: 'EZAccounting Desktop Application',
-              detail: 'Version 1.0.0\nA simple accounting solution for your business.'
+              detail: `Version ${appConfig.version}\nA professional accounting solution for your business.`
             });
           }
         }
@@ -176,56 +179,113 @@ function createMenu(): void {
   Menu.setApplicationMenu(menu);
 }
 
-// IPC handlers for communication with renderer process
-ipcMain.handle('get-backend-url', () => {
-  return config.backendUrl;
-});
+/**
+ * Setup IPC handlers
+ */
+function setupIpcHandlers(): void {
+  // Backend connection handlers
+  ipcMain.handle('get-backend-url', () => {
+    return appConfig.backendUrl;
+  });
 
-ipcMain.handle('check-backend-connection', async () => {
+  ipcMain.handle('check-backend-connection', async () => {
+    try {
+      const response = await fetch(`${appConfig.backendUrl}/health`);
+      const data = await response.json();
+      return { connected: true, data };
+    } catch (error) {
+      return { connected: false, error: (error as Error).message };
+    }
+  });
+
+  // Database handlers
+  ipcMain.handle('db-insert-test-record', async (event, name: string, value: string) => {
+    if (!testService) {
+      return { success: false, error: 'Database service not initialized' };
+    }
+    
+    try {
+      const result = await testService.insertTestRecord(name, value);
+      return result;
+    } catch (error) {
+      return { success: false, error: (error as Error).message };
+    }
+  });
+
+  ipcMain.handle('db-get-test-records', async () => {
+    if (!testService) {
+      console.log('IPC: testService not initialized');
+      return { success: false, error: 'Database service not initialized' };
+    }
+    
+    try {
+      console.log('IPC: Calling testService.getTestRecords()');
+      const result = await testService.getTestRecords();
+      console.log('IPC: Result from testService:', result);
+      return result;
+    } catch (error) {
+      console.log('IPC: Error in db-get-test-records:', error);
+      return { success: false, error: (error as Error).message };
+    }
+  });
+
+  ipcMain.handle('db-get-database-info', async () => {
+    if (!testService) {
+      return { success: false, error: 'Database service not initialized' };
+    }
+    
+    try {
+      const result = await testService.getDatabaseInfo();
+      return result;
+    } catch (error) {
+      return { success: false, error: (error as Error).message };
+    }
+  });
+
+  ipcMain.handle('db-is-connected', () => {
+    return databaseConnection.isConnected();
+  });
+
+  // Configuration handlers
+  ipcMain.handle('get-config-info', () => {
+    return {
+      backendUrl: appConfig.backendUrl,
+      databasePath: databaseConfig.path,
+      databaseName: databaseConfig.name,
+      userDataPath: databaseConfig.userDataPath,
+      isCustomDbPath: databaseConfig.isCustomPath,
+      isCustomBackendUrl: !!(process.env.EZACCOUNTING_BACKEND_URL || process.env.BACKEND_URL)
+    };
+  });
+}
+
+// App event handlers
+app.whenReady().then(async () => {
   try {
-    const response = await fetch(`${BACKEND_URL}/health`);
-    const data = await response.json();
-    return { connected: true, data };
+    await initializeServices();
+    createWindow();
+    createMenu();
+    setupIpcHandlers();
+    
+    logger.info('Application started successfully');
   } catch (error) {
-    return { connected: false, error: (error as Error).message };
+    logger.error('Failed to start application:', error);
+    app.quit();
   }
+
+  app.on('activate', () => {
+    if (BrowserWindow.getAllWindows().length === 0) {
+      createWindow();
+    }
+  });
 });
 
-// Database IPC handlers
-ipcMain.handle('db-insert-test-record', async (event, name: string, value: string) => {
-  try {
-    const id = await databaseService.insertTestRecord(name, value);
-    return { success: true, id };
-  } catch (error) {
-    return { success: false, error: (error as Error).message };
+app.on('window-all-closed', async () => {
+  await cleanupServices();
+  
+  if (process.platform !== 'darwin') {
+    app.quit();
   }
-});
-
-ipcMain.handle('db-get-test-records', async () => {
-  try {
-    const records = await databaseService.getTestRecords();
-    return { success: true, records };
-  } catch (error) {
-    return { success: false, error: (error as Error).message };
-  }
-});
-
-ipcMain.handle('db-get-database-info', async () => {
-  try {
-    const info = await databaseService.getDatabaseInfo();
-    return { success: true, info };
-  } catch (error) {
-    return { success: false, error: (error as Error).message };
-  }
-});
-
-ipcMain.handle('db-is-connected', () => {
-  return databaseService.isConnected();
-});
-
-// Configuration IPC handlers
-ipcMain.handle('get-config-info', () => {
-  return getConfigInfo();
 });
 
 export default app;
