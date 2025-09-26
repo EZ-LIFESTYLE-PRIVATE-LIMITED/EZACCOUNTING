@@ -191,6 +191,57 @@
                 </button>
             </div>
 
+            <div class="status-card">
+                <h3>SQLite Database Status</h3>
+                <div id="database-status">
+                    <span class="status-indicator status-disconnected" id="db-status-indicator"></span>
+                    <span id="db-status-text">Checking database connection...</span>
+                </div>
+                <div class="loading" id="db-loading">
+                    <div class="spinner"></div>
+                    <p>Checking database...</p>
+                </div>
+                <div style="margin-top: 15px;">
+                    <button id="test-db-btn" onclick="testDatabaseOperations()" style="margin-right: 10px;">
+                        Test Database
+                    </button>
+                    <button id="add-test-record-btn" onclick="addTestRecord()" style="margin-right: 10px;">
+                        Add Test Record
+                    </button>
+                    <button id="view-records-btn" onclick="viewTestRecords()">
+                        View Records
+                    </button>
+                </div>
+                <div id="db-results" style="margin-top: 15px; padding: 10px; background: #f8f9fa; border-radius: 5px; display: none;">
+                    <h4>Database Results:</h4>
+                    <pre id="db-results-content"></pre>
+                </div>
+            </div>
+
+            <div class="status-card">
+                <h3>Configuration Settings</h3>
+                <div id="config-info">
+                    <div style="margin-bottom: 10px;">
+                        <strong>Backend URL:</strong> <span id="backend-url-display">Loading...</span>
+                    </div>
+                    <div style="margin-bottom: 10px;">
+                        <strong>Database Path:</strong> <span id="db-path-display">Loading...</span>
+                    </div>
+                    <div style="margin-bottom: 10px;">
+                        <strong>User Data Directory:</strong> <span id="user-data-display">Loading...</span>
+                    </div>
+                    <div style="margin-top: 15px;">
+                        <button id="show-config-btn" onclick="showConfigurationInfo()">
+                            Show Full Configuration
+                        </button>
+                    </div>
+                </div>
+                <div id="config-results" style="margin-top: 15px; padding: 10px; background: #f8f9fa; border-radius: 5px; display: none;">
+                    <h4>Configuration Details:</h4>
+                    <pre id="config-results-content"></pre>
+                </div>
+            </div>
+
             <div class="feature-grid">
                 <div class="feature-card" onclick="openFeature('transactions')">
                     <div class="feature-icon">💳</div>
@@ -227,6 +278,8 @@
         // Check backend connection on load
         window.addEventListener('DOMContentLoaded', () => {
             checkBackendConnection();
+            checkDatabaseConnection();
+            loadConfigurationInfo();
         });
 
         async function checkBackendConnection() {
@@ -260,6 +313,179 @@
         function openFeature(feature) {
             // This would open different views/panels based on the feature
             alert(`Opening ${feature} feature...\n\nThis functionality will be implemented in the next version.`);
+        }
+
+        // Database functions
+        async function checkDatabaseConnection() {
+            const statusIndicator = document.getElementById('db-status-indicator');
+            const statusText = document.getElementById('db-status-text');
+            const loading = document.getElementById('db-loading');
+
+            loading.style.display = 'block';
+
+            try {
+                const isConnected = await window.electronAPI.dbIsConnected();
+                
+                if (isConnected) {
+                    statusIndicator.className = 'status-indicator status-connected';
+                    statusText.textContent = 'SQLite database connected successfully';
+                } else {
+                    statusIndicator.className = 'status-indicator status-disconnected';
+                    statusText.textContent = 'SQLite database not connected';
+                }
+            } catch (error) {
+                statusIndicator.className = 'status-indicator status-disconnected';
+                statusText.textContent = `Database error: ${error.message}`;
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        async function testDatabaseOperations() {
+            const resultsDiv = document.getElementById('db-results');
+            const resultsContent = document.getElementById('db-results-content');
+            const testBtn = document.getElementById('test-db-btn');
+
+            testBtn.disabled = true;
+            resultsDiv.style.display = 'block';
+            resultsContent.textContent = 'Testing database operations...';
+
+            try {
+                // Get database info
+                const dbInfo = await window.electronAPI.dbGetDatabaseInfo();
+                
+                if (dbInfo.success) {
+                    resultsContent.textContent = JSON.stringify({
+                        databaseInfo: dbInfo.info,
+                        message: 'Database test successful!'
+                    }, null, 2);
+                } else {
+                    resultsContent.textContent = `Database test failed: ${dbInfo.error}`;
+                }
+            } catch (error) {
+                resultsContent.textContent = `Error testing database: ${error.message}`;
+            } finally {
+                testBtn.disabled = false;
+            }
+        }
+
+        async function addTestRecord() {
+            const resultsDiv = document.getElementById('db-results');
+            const resultsContent = document.getElementById('db-results-content');
+            const addBtn = document.getElementById('add-test-record-btn');
+
+            addBtn.disabled = true;
+            resultsDiv.style.display = 'block';
+            resultsContent.textContent = 'Adding test record...';
+
+            try {
+                const timestamp = new Date().toISOString();
+                const result = await window.electronAPI.dbInsertTestRecord(
+                    `Test Record ${timestamp}`,
+                    `Value ${Math.random().toString(36).substr(2, 9)}`
+                );
+                
+                if (result.success) {
+                    resultsContent.textContent = JSON.stringify({
+                        message: 'Test record added successfully!',
+                        recordId: result.id,
+                        timestamp: timestamp
+                    }, null, 2);
+                } else {
+                    resultsContent.textContent = `Failed to add test record: ${result.error}`;
+                }
+            } catch (error) {
+                resultsContent.textContent = `Error adding test record: ${error.message}`;
+            } finally {
+                addBtn.disabled = false;
+            }
+        }
+
+        async function viewTestRecords() {
+            const resultsDiv = document.getElementById('db-results');
+            const resultsContent = document.getElementById('db-results-content');
+            const viewBtn = document.getElementById('view-records-btn');
+
+            viewBtn.disabled = true;
+            resultsDiv.style.display = 'block';
+            resultsContent.textContent = 'Loading test records...';
+
+            try {
+                const result = await window.electronAPI.dbGetTestRecords();
+                
+                if (result.success) {
+                    resultsContent.textContent = JSON.stringify({
+                        message: 'Test records retrieved successfully!',
+                        count: result.records.length,
+                        records: result.records
+                    }, null, 2);
+                } else {
+                    resultsContent.textContent = `Failed to get test records: ${result.error}`;
+                }
+            } catch (error) {
+                resultsContent.textContent = `Error getting test records: ${error.message}`;
+            } finally {
+                viewBtn.disabled = false;
+            }
+        }
+
+        // Configuration functions
+        async function loadConfigurationInfo() {
+            try {
+                const config = await window.electronAPI.getConfigInfo();
+                
+                document.getElementById('backend-url-display').textContent = config.backendUrl;
+                document.getElementById('db-path-display').textContent = config.databasePath;
+                document.getElementById('user-data-display').textContent = config.userDataPath;
+            } catch (error) {
+                console.error('Error loading configuration:', error);
+                document.getElementById('backend-url-display').textContent = 'Error loading config';
+                document.getElementById('db-path-display').textContent = 'Error loading config';
+                document.getElementById('user-data-display').textContent = 'Error loading config';
+            }
+        }
+
+        async function showConfigurationInfo() {
+            const resultsDiv = document.getElementById('config-results');
+            const resultsContent = document.getElementById('config-results-content');
+            const showBtn = document.getElementById('show-config-btn');
+
+            showBtn.disabled = true;
+            resultsDiv.style.display = 'block';
+            resultsContent.textContent = 'Loading configuration...';
+
+            try {
+                const config = await window.electronAPI.getConfigInfo();
+                
+                resultsContent.textContent = JSON.stringify({
+                    message: 'Configuration loaded successfully!',
+                    configuration: {
+                        backendUrl: config.backendUrl,
+                        databasePath: config.databasePath,
+                        databaseName: config.databaseName,
+                        userDataPath: config.userDataPath,
+                        isCustomDbPath: config.isCustomDbPath,
+                        isCustomBackendUrl: config.isCustomBackendUrl
+                    },
+                    environmentVariables: {
+                        EZACCOUNTING_BACKEND_URL: 'Set to customize backend URL',
+                        EZACCOUNTING_DB_PATH: 'Set to customize database path',
+                        EZACCOUNTING_DB_NAME: 'Set to customize database name',
+                        BACKEND_URL: 'Alternative backend URL variable',
+                        DATABASE_PATH: 'Alternative database path variable',
+                        DATABASE_NAME: 'Alternative database name variable'
+                    },
+                    usage: {
+                        windows: 'set EZACCOUNTING_BACKEND_URL=http://your-backend:3000 && EZAccounting.exe',
+                        linux: 'EZACCOUNTING_BACKEND_URL=http://your-backend:3000 ./EZAccounting',
+                        mac: 'EZACCOUNTING_BACKEND_URL=http://your-backend:3000 ./EZAccounting.app'
+                    }
+                }, null, 2);
+            } catch (error) {
+                resultsContent.textContent = `Error loading configuration: ${error.message}`;
+            } finally {
+                showBtn.disabled = false;
+            }
         }
     </script>
 </body>

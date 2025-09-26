@@ -1,0 +1,6 @@
+---
+description: Guildline to prevent mistakes
+globs:
+ - always do cd frontend before running any frontend command (i.e npm run start:dev)
+alwaysApply: true
+---

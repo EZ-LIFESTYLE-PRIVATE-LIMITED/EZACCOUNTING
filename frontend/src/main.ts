@@ -1,11 +1,14 @@
 import { app, BrowserWindow, Menu, ipcMain, dialog } from 'electron';
 import * as path from 'path';
+import { databaseService } from './database';
+import { getAppConfig, getConfigInfo } from './config';
 
 // Keep a global reference of the window object
 let mainWindow: BrowserWindow | null = null;
 
-// Backend API URL - this should match your Docker setup
-const BACKEND_URL = 'http://localhost:3000';
+// Get configurable backend URL
+const config = getAppConfig();
+const BACKEND_URL = config.backendUrl;
 
 function createWindow(): void {
   // Create the browser window
@@ -44,7 +47,16 @@ function createWindow(): void {
 }
 
 // This method will be called when Electron has finished initialization
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
+  // Initialize database
+  try {
+    await databaseService.initialize();
+    await databaseService.createTables();
+    console.log('Database initialized successfully');
+  } catch (error) {
+    console.error('Failed to initialize database:', error);
+  }
+
   createWindow();
   createMenu();
 
@@ -57,7 +69,14 @@ app.whenReady().then(() => {
 });
 
 // Quit when all windows are closed
-app.on('window-all-closed', () => {
+app.on('window-all-closed', async () => {
+  // Close database connection before quitting
+  try {
+    await databaseService.close();
+  } catch (error) {
+    console.error('Error closing database:', error);
+  }
+  
   // On macOS, keep app running even when all windows are closed
   if (process.platform !== 'darwin') {
     app.quit();
@@ -159,7 +178,7 @@ function createMenu(): void {
 
 // IPC handlers for communication with renderer process
 ipcMain.handle('get-backend-url', () => {
-  return BACKEND_URL;
+  return config.backendUrl;
 });
 
 ipcMain.handle('check-backend-connection', async () => {
@@ -170,6 +189,43 @@ ipcMain.handle('check-backend-connection', async () => {
   } catch (error) {
     return { connected: false, error: (error as Error).message };
   }
+});
+
+// Database IPC handlers
+ipcMain.handle('db-insert-test-record', async (event, name: string, value: string) => {
+  try {
+    const id = await databaseService.insertTestRecord(name, value);
+    return { success: true, id };
+  } catch (error) {
+    return { success: false, error: (error as Error).message };
+  }
+});
+
+ipcMain.handle('db-get-test-records', async () => {
+  try {
+    const records = await databaseService.getTestRecords();
+    return { success: true, records };
+  } catch (error) {
+    return { success: false, error: (error as Error).message };
+  }
+});
+
+ipcMain.handle('db-get-database-info', async () => {
+  try {
+    const info = await databaseService.getDatabaseInfo();
+    return { success: true, info };
+  } catch (error) {
+    return { success: false, error: (error as Error).message };
+  }
+});
+
+ipcMain.handle('db-is-connected', () => {
+  return databaseService.isConnected();
+});
+
+// Configuration IPC handlers
+ipcMain.handle('get-config-info', () => {
+  return getConfigInfo();
 });
 
 export default app;
