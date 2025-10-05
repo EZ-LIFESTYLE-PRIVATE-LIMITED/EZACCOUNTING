@@ -23,8 +23,19 @@ export function getDatabaseConfig(): DatabaseConfig {
   let databasePath: string;
   let isCustomPath = false;
   
-  if (process.env.EZACCOUNTING_DB_PATH || process.env.DATABASE_PATH) {
-    // Use custom database path if provided
+  // Check for DATABASE_URL first (new simplified approach)
+  if (process.env.DATABASE_URL) {
+    const dbUrl = process.env.DATABASE_URL;
+    if (dbUrl.startsWith('file:')) {
+      databasePath = dbUrl.substring(5); // Remove 'file:' prefix
+      isCustomPath = true;
+    } else {
+      // Fallback to default if invalid DATABASE_URL format
+      databasePath = path.join(process.cwd(), 'prisma', databaseName);
+      isCustomPath = true;
+    }
+  } else if (process.env.EZACCOUNTING_DB_PATH || process.env.DATABASE_PATH) {
+    // Legacy support for old environment variables
     const customPath = process.env.EZACCOUNTING_DB_PATH || process.env.DATABASE_PATH || '';
     if (customPath) {
       isCustomPath = true;

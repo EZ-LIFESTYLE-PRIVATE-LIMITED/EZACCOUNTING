@@ -217,7 +217,7 @@ export class InvoicePage {
     console.log('Delete invoice:', invoice);
     
     // Show confirmation dialog
-    if (confirm(`Are you sure you want to delete invoice ${invoice.invoiceNumber}?`)) {
+    if (confirm(`Are you sure you want to delete invoice ${invoice.invoice_number}?`)) {
       this.deleteInvoice(invoice);
     }
   }
@@ -226,7 +226,7 @@ export class InvoicePage {
    * Handle status change action
    */
   private handleStatusChange(invoice: Invoice, newStatus: InvoiceStatus): void {
-    console.log('Status change:', invoice.invoiceNumber, newStatus);
+    console.log('Status change:', invoice.invoice_number, newStatus);
     
     // Update invoice status
     this.updateInvoiceStatus(invoice, newStatus);
@@ -297,7 +297,7 @@ export class InvoicePage {
    */
   private showInvoiceDetailModal(invoice: Invoice): void {
     // TODO: Implement invoice detail modal
-    alert(`Invoice Detail Modal for ${invoice.invoiceNumber} - To be implemented`);
+    alert(`Invoice Detail Modal for ${invoice.invoice_number} - To be implemented`);
   }
 
   /**
@@ -305,7 +305,7 @@ export class InvoicePage {
    */
   private showEditInvoiceModal(invoice: Invoice): void {
     // TODO: Implement edit invoice modal
-    alert(`Edit Invoice Modal for ${invoice.invoiceNumber} - To be implemented`);
+    alert(`Edit Invoice Modal for ${invoice.invoice_number} - To be implemented`);
   }
 
   /**
@@ -313,14 +313,14 @@ export class InvoicePage {
    */
   private async deleteInvoice(invoice: Invoice): Promise<void> {
     try {
-      await this.invoiceService.deleteInvoice(invoice.id);
+      await this.invoiceService.deleteInvoice(invoice.invoice_id.toString());
       
       // Update the invoice list
       if (this.invoiceList) {
-        this.invoiceList.removeInvoice(invoice.id);
+        this.invoiceList.removeInvoice(invoice.invoice_id.toString());
       }
       
-      console.log(`Invoice ${invoice.invoiceNumber} deleted successfully`);
+      console.log(`Invoice ${invoice.invoice_number} deleted successfully`);
     } catch (error) {
       console.error('Error deleting invoice:', error);
       alert(`Failed to delete invoice: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -332,7 +332,7 @@ export class InvoicePage {
    */
   private async updateInvoiceStatus(invoice: Invoice, newStatus: InvoiceStatus): Promise<void> {
     try {
-      const updatedInvoice = await this.invoiceService.updateInvoice(invoice.id, {
+      const updatedInvoice = await this.invoiceService.updateInvoice(invoice.invoice_id.toString(), {
         status: newStatus
       });
       
@@ -341,7 +341,7 @@ export class InvoicePage {
         this.invoiceList.updateInvoice(updatedInvoice);
       }
       
-      console.log(`Invoice ${invoice.invoiceNumber} status updated to ${newStatus}`);
+      console.log(`Invoice ${invoice.invoice_number} status updated to ${newStatus}`);
     } catch (error) {
       console.error('Error updating invoice status:', error);
       alert(`Failed to update invoice status: ${error instanceof Error ? error.message : 'Unknown error'}`);

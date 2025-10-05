@@ -679,8 +679,8 @@
                 const { InvoicePage } = await import('../pages-bundled/InvoicePage.js');
                 const { InvoiceService } = await import('../pages-bundled/InvoiceService.js');
                 
-                // Initialize invoice service with dummy data
-                const invoiceService = new InvoiceService({ dataSource: 'dummy' });
+                // Initialize invoice service with database
+                const invoiceService = new InvoiceService({ dataSource: 'database' });
                 
                 // Create and render invoice page
                 const invoicePage = new InvoicePage({

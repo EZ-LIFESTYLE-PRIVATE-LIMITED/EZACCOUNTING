@@ -3,6 +3,7 @@ import * as path from 'path';
 import { databaseConnection } from './database/connection';
 import { PrismaService } from './database/services/PrismaService';
 import { getPrismaClient } from './database/prisma-client';
+import { DevSeeder } from './database/dev-seeder';
 import { getAppConfig } from './config/app';
 import { getDatabaseConfig } from './config/database';
 import { logger } from './utils/logger';
@@ -130,11 +131,38 @@ function createWindow(): void {
 async function initializeServices(): Promise<void> {
   try {
     logger.info('Initializing database connection...');
+    
+    // Get database configuration and set DATABASE_URL for Prisma
+    const dbConfig = getDatabaseConfig();
+    process.env.DATABASE_URL = `file:${dbConfig.path}`;
+    console.log('Database URL set to:', process.env.DATABASE_URL);
+    
+    // Run migrations automatically for development
+    if (process.env.NODE_ENV === 'development' || process.argv.includes('--dev')) {
+      logger.info('Running database migrations for development...');
+      try {
+        const { execSync } = require('child_process');
+        execSync('npx prisma migrate dev --name auto-migration', { 
+          stdio: 'inherit',
+          cwd: process.cwd()
+        });
+        logger.info('Database migrations completed successfully');
+      } catch (migrationError) {
+        logger.warn('Migration failed, continuing with existing database:', migrationError);
+      }
+    }
+    
     await databaseConnection.initialize();
     
     // Initialize services
     prismaService = new PrismaService();
     prismaClient = getPrismaClient();
+    
+    // Auto-seed data for development (after services are initialized)
+    if (process.env.NODE_ENV === 'development' || process.argv.includes('--dev')) {
+      const devSeeder = new DevSeeder();
+      await devSeeder.seedIfEmpty();
+    }
     
     logger.info('Services initialized successfully');
   } catch (error) {
@@ -370,6 +398,186 @@ function setupIpcHandlers(): void {
     } catch (error) {
       console.error('Database connection test failed:', error);
       return false;
+    }
+  });
+
+  // Invoice handlers
+  ipcMain.handle('getInvoices', async (event, filters) => {
+    console.log('IPC: getInvoices called with filters:', filters);
+    console.log('IPC: Database path:', databaseConfig.path);
+    console.log('IPC: PrismaClient initialized:', !!prismaClient);
+    
+    if (!prismaClient) {
+      console.log('IPC: PrismaClient not initialized');
+      return { success: false, error: 'Database service not initialized' };
+    }
+    
+    try {
+      const whereClause: any = {};
+      
+      if (filters?.status) {
+        whereClause.status = filters.status;
+      }
+      
+      if (filters?.org_id) {
+        whereClause.org_id = filters.org_id;
+      }
+      
+      if (filters?.searchTerm) {
+        whereClause.OR = [
+          {
+            invoice_number: {
+              contains: filters.searchTerm,
+              mode: 'insensitive'
+            }
+          },
+          {
+            org: {
+              name: {
+                contains: filters.searchTerm,
+                mode: 'insensitive'
+              }
+            }
+          }
+        ];
+      }
+      
+      if (filters?.dateFrom || filters?.dateTo) {
+        whereClause.invoice_date = {};
+        if (filters.dateFrom) {
+          whereClause.invoice_date.gte = new Date(filters.dateFrom);
+        }
+        if (filters.dateTo) {
+          whereClause.invoice_date.lte = new Date(filters.dateTo);
+        }
+      }
+
+      const invoices = await prismaClient.invoice.findMany({
+        where: whereClause,
+        include: {
+          org: true
+        },
+        orderBy: {
+          invoice_date: 'desc'
+        }
+      });
+
+      console.log('IPC: Found', invoices.length, 'invoices');
+      return { success: true, data: invoices };
+    } catch (error) {
+      console.error('IPC: Error fetching invoices:', error);
+      return { success: false, error: (error as Error).message };
+    }
+  });
+
+  ipcMain.handle('getInvoiceById', async (event, id) => {
+    if (!prismaClient) {
+      return { success: false, error: 'Database service not initialized' };
+    }
+    
+    try {
+      const invoice = await prismaClient.invoice.findUnique({
+        where: {
+          invoice_id: parseInt(id)
+        },
+        include: {
+          org: true,
+          invoice_items: {
+            include: {
+              item: true
+            }
+          }
+        }
+      });
+      
+      return { success: true, data: invoice };
+    } catch (error) {
+      return { success: false, error: (error as Error).message };
+    }
+  });
+
+  ipcMain.handle('createInvoice', async (event, invoice) => {
+    if (!prismaClient) {
+      return { success: false, error: 'Database service not initialized' };
+    }
+    
+    try {
+      const newInvoice = await prismaClient.invoice.create({
+        data: {
+          org_id: invoice.org_id,
+          invoice_date: new Date(invoice.invoice_date),
+          due_date: invoice.due_date ? new Date(invoice.due_date) : null,
+          status: invoice.status,
+          total_amount: invoice.total_amount,
+          gst_amount: invoice.gst_amount,
+          net_amount: invoice.net_amount
+        },
+        include: {
+          org: true,
+          invoice_items: {
+            include: {
+              item: true
+            }
+          }
+        }
+      });
+      
+      return { success: true, data: newInvoice };
+    } catch (error) {
+      return { success: false, error: (error as Error).message };
+    }
+  });
+
+  ipcMain.handle('updateInvoice', async (event, id, updates) => {
+    if (!prismaClient) {
+      return { success: false, error: 'Database service not initialized' };
+    }
+    
+    try {
+      const updatedInvoice = await prismaClient.invoice.update({
+        where: {
+          invoice_id: parseInt(id)
+        },
+        data: {
+          org_id: updates.org_id,
+          invoice_date: updates.invoice_date ? new Date(updates.invoice_date) : undefined,
+          due_date: updates.due_date ? new Date(updates.due_date) : undefined,
+          status: updates.status,
+          total_amount: updates.total_amount,
+          gst_amount: updates.gst_amount,
+          net_amount: updates.net_amount
+        },
+        include: {
+          org: true,
+          invoice_items: {
+            include: {
+              item: true
+            }
+          }
+        }
+      });
+      
+      return { success: true, data: updatedInvoice };
+    } catch (error) {
+      return { success: false, error: (error as Error).message };
+    }
+  });
+
+  ipcMain.handle('deleteInvoice', async (event, id) => {
+    if (!prismaClient) {
+      return { success: false, error: 'Database service not initialized' };
+    }
+    
+    try {
+      await prismaClient.invoice.delete({
+        where: {
+          invoice_id: parseInt(id)
+        }
+      });
+      
+      return { success: true };
+    } catch (error) {
+      return { success: false, error: (error as Error).message };
     }
   });
 

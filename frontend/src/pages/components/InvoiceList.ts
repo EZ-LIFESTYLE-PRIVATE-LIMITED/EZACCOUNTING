@@ -28,7 +28,7 @@ export class InvoiceList {
   private container: HTMLElement;
   private props: InvoiceListProps;
   private state: InvoiceListState;
-  private invoiceRows: Map<string, InvoiceRow> = new Map();
+  private invoiceRows: Map<number, InvoiceRow> = new Map();
 
   constructor(container: HTMLElement, props: InvoiceListProps) {
     this.container = container;
@@ -201,7 +201,7 @@ export class InvoiceList {
     }
 
     return this.state.invoices.map(invoice => 
-      `<tr class="invoice-row-placeholder" data-invoice-id="${invoice.id}"></tr>`
+      `<tr class="invoice-row-placeholder" data-invoice-id="${invoice.invoice_id}"></tr>`
     ).join('');
   }
 
@@ -309,13 +309,19 @@ export class InvoiceList {
    * Load invoices from service
    */
   private async loadInvoices(): Promise<void> {
+    console.log('InvoiceList: loadInvoices called with filters:', this.state.filters);
     this.setState({ loading: true, error: null });
     
     try {
+      console.log('InvoiceList: Calling invoiceService.getInvoices...');
       const invoices = await this.props.invoiceService.getInvoices(this.state.filters);
+      console.log('InvoiceList: Received invoices:', invoices);
+      console.log('InvoiceList: Number of invoices:', invoices.length);
+      
       this.setState({ invoices, loading: false });
       this.renderInvoiceRows();
     } catch (error) {
+      console.error('InvoiceList: Error loading invoices:', error);
       this.setState({ 
         error: error instanceof Error ? error.message : 'Failed to load invoices',
         loading: false 
@@ -338,7 +344,7 @@ export class InvoiceList {
     this.state.invoices.forEach(invoice => {
       const rowElement = document.createElement('tr');
       rowElement.className = 'invoice-row-placeholder';
-      rowElement.setAttribute('data-invoice-id', invoice.id);
+      rowElement.setAttribute('data-invoice-id', invoice.invoice_id.toString());
       tbody.appendChild(rowElement);
 
       const rowProps: InvoiceRowProps = {
@@ -351,7 +357,7 @@ export class InvoiceList {
 
       const invoiceRow = new InvoiceRow(rowElement, rowProps);
       invoiceRow.render();
-      this.invoiceRows.set(invoice.id, invoiceRow);
+      this.invoiceRows.set(invoice.invoice_id, invoiceRow);
     });
   }
 
@@ -463,11 +469,11 @@ export class InvoiceList {
    */
   public updateInvoice(invoice: Invoice): void {
     const invoices = this.state.invoices.map(inv => 
-      inv.id === invoice.id ? invoice : inv
+      inv.invoice_id === invoice.invoice_id ? invoice : inv
     );
     this.setState({ invoices });
     
-    const invoiceRow = this.invoiceRows.get(invoice.id);
+    const invoiceRow = this.invoiceRows.get(invoice.invoice_id);
     if (invoiceRow) {
       invoiceRow.updateInvoice(invoice);
     }
@@ -477,13 +483,13 @@ export class InvoiceList {
    * Remove invoice from the list
    */
   public removeInvoice(invoiceId: string): void {
-    const invoices = this.state.invoices.filter(inv => inv.id !== invoiceId);
+    const invoices = this.state.invoices.filter(inv => inv.invoice_id !== parseInt(invoiceId));
     this.setState({ invoices });
     
-    const invoiceRow = this.invoiceRows.get(invoiceId);
+    const invoiceRow = this.invoiceRows.get(parseInt(invoiceId));
     if (invoiceRow) {
       invoiceRow.destroy();
-      this.invoiceRows.delete(invoiceId);
+      this.invoiceRows.delete(parseInt(invoiceId));
     }
     
     this.render();

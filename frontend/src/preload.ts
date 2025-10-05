@@ -19,6 +19,13 @@ contextBridge.exposeInMainWorld('electronAPI', {
   saveRegistrationData: (data: any) => ipcRenderer.invoke('save-registration-data', data),
   checkFirstTimeUser: () => ipcRenderer.invoke('check-first-time-user'),
   
+  // Invoice API methods
+  getInvoices: (filters?: any) => ipcRenderer.invoke('getInvoices', filters),
+  getInvoiceById: (id: string) => ipcRenderer.invoke('getInvoiceById', id),
+  createInvoice: (invoice: any) => ipcRenderer.invoke('createInvoice', invoice),
+  updateInvoice: (id: string, updates: any) => ipcRenderer.invoke('updateInvoice', id, updates),
+  deleteInvoice: (id: string) => ipcRenderer.invoke('deleteInvoice', id),
+  
   // Add more API methods as needed
   openFile: () => ipcRenderer.invoke('open-file'),
   saveFile: (data: any) => ipcRenderer.invoke('save-file', data),
@@ -48,6 +55,13 @@ export interface ElectronAPI {
   // Registration API types
   saveRegistrationData: (data: any) => Promise<{ success: boolean; error?: string }>;
   checkFirstTimeUser: () => Promise<boolean>;
+  
+  // Invoice API types
+  getInvoices: (filters?: any) => Promise<{ success: boolean; data?: any[]; error?: string }>;
+  getInvoiceById: (id: string) => Promise<{ success: boolean; data?: any; error?: string }>;
+  createInvoice: (invoice: any) => Promise<{ success: boolean; data?: any; error?: string }>;
+  updateInvoice: (id: string, updates: any) => Promise<{ success: boolean; data?: any; error?: string }>;
+  deleteInvoice: (id: string) => Promise<{ success: boolean; error?: string }>;
   
   openFile: () => Promise<any>;
   saveFile: (data: any) => Promise<any>;

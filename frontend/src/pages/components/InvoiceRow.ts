@@ -37,30 +37,30 @@ export class InvoiceRow {
    */
   private getInvoiceRowHTML(): string {
     return `
-      <tr class="invoice-row" data-invoice-id="${this.invoice.id}">
+      <tr class="invoice-row" data-invoice-id="${this.invoice.invoice_id}">
         <td class="invoice-id">
-          <span class="invoice-number">${this.invoice.invoiceNumber}</span>
+          <span class="invoice-number">${this.invoice.invoice_number}</span>
         </td>
         
         <td class="customer-info">
-          <div class="customer-name">${this.invoice.customerName}</div>
-          ${this.invoice.customerId ? `<div class="customer-id">${this.invoice.customerId}</div>` : ''}
+          <div class="customer-name">${this.invoice.org?.name || 'N/A'}</div>
+          ${this.invoice.org?.org_id ? `<div class="customer-id">${this.invoice.org.org_id}</div>` : ''}
         </td>
         
         <td class="amount">
-          <div class="amount-value">₹${this.formatCurrency(this.invoice.amount)}</div>
+          <div class="amount-value">₹${this.formatCurrency(this.invoice.total_amount)}</div>
         </td>
         
         <td class="gst-amount">
-          <div class="gst-value">₹${this.formatCurrency(this.invoice.gstAmount)}</div>
+          <div class="gst-value">₹${this.formatCurrency(this.invoice.gst_amount)}</div>
         </td>
         
         <td class="date">
-          <div class="date-value">${this.formatDate(this.invoice.date)}</div>
+          <div class="date-value">${this.formatDate(this.invoice.invoice_date)}</div>
         </td>
         
         <td class="due-date">
-          <div class="due-date-value">${this.formatDate(this.invoice.dueDate)}</div>
+          <div class="due-date-value">${this.formatDate(this.invoice.due_date)}</div>
         </td>
         
         <td class="status">
@@ -229,8 +229,9 @@ export class InvoiceRow {
   /**
    * Format date values
    */
-  private formatDate(dateString: string): string {
-    const date = new Date(dateString);
+  private formatDate(dateInput: Date | string | null): string {
+    if (!dateInput) return 'N/A';
+    const date = typeof dateInput === 'string' ? new Date(dateInput) : dateInput;
     return date.toLocaleDateString('en-IN', {
       year: 'numeric',
       month: '2-digit',
@@ -242,7 +243,8 @@ export class InvoiceRow {
    * Check if invoice is overdue
    */
   private isOverdue(): boolean {
-    const dueDate = new Date(this.invoice.dueDate);
+    if (!this.invoice.due_date) return false;
+    const dueDate = typeof this.invoice.due_date === 'string' ? new Date(this.invoice.due_date) : this.invoice.due_date;
     const today = new Date();
     return dueDate < today && this.invoice.status !== InvoiceStatus.PAID;
   }

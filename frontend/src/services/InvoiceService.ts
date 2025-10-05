@@ -2,27 +2,59 @@ import { logger } from '../utils/logger';
 
 // Types
 export interface Invoice {
-  id: string;
-  invoiceNumber: string;
-  customerName: string;
-  customerId: string;
-  amount: number;
-  gstAmount: number;
-  date: string;
-  dueDate: string;
+  invoice_id: number;
+  invoice_number: string;
+  org_id: number;
+  invoice_date: Date;
+  due_date: Date | null;
   status: InvoiceStatus;
-  description?: string;
-  items?: InvoiceItem[];
+  total_amount: number;
+  gst_amount: number;
+  net_amount: number;
+  created_at: Date;
+  updated_at: Date;
+  org?: Org;
+  invoice_items?: InvoiceItem[];
+}
+
+export interface Org {
+  org_id: number;
+  name: string;
+  user_name: string | null;
+  gstin: string | null;
+  state: string | null;
+  city_state: string | null;
+  email: string | null;
+  phone: string | null;
+  business_address: string | null;
+  invoice_series: string | null;
+  signature_url: string | null;
+  org_type: 'BUSINESS' | 'CUSTOMER' | 'SUPPLIER';
+  created_at: Date;
+  updated_at: Date;
 }
 
 export interface InvoiceItem {
-  id: string;
-  description: string;
+  invoice_item_id: number;
+  invoice_id: number;
+  item_id: number;
   quantity: number;
   rate: number;
   amount: number;
-  gstRate: number;
-  gstAmount: number;
+  created_at: Date;
+  updated_at: Date;
+  item?: Item;
+}
+
+export interface Item {
+  item_id: number;
+  item_name: string;
+  item_description: string | null;
+  item_sku: string | null;
+  item_gst: number;
+  item_category: string | null;
+  created_at: Date;
+  updated_at: Date;
 }
 
 export enum InvoiceStatus {
@@ -59,125 +91,10 @@ export class InvoiceService {
 
   /**
    * Initialize dummy data for development
+   * No dummy data - only database and API sources
    */
   private initializeDummyData(): void {
-    this.dummyInvoices = [
-      {
-        id: '1',
-        invoiceNumber: 'INV-001',
-        customerName: 'Tech Solutions Pvt Ltd',
-        customerId: 'CUST-001',
-        amount: 25000,
-        gstAmount: 4500,
-        date: '2024-01-15',
-        dueDate: '2024-02-15',
-        status: InvoiceStatus.PAID,
-        description: 'Software development services',
-        items: [
-          {
-            id: '1',
-            description: 'Web Development',
-            quantity: 1,
-            rate: 25000,
-            amount: 25000,
-            gstRate: 18,
-            gstAmount: 4500
-          }
-        ]
-      },
-      {
-        id: '2',
-        invoiceNumber: 'INV-002',
-        customerName: 'Global Enterprises',
-        customerId: 'CUST-002',
-        amount: 15750,
-        gstAmount: 2835,
-        date: '2024-01-12',
-        dueDate: '2024-02-12',
-        status: InvoiceStatus.PENDING,
-        description: 'Consulting services',
-        items: [
-          {
-            id: '2',
-            description: 'Business Consulting',
-            quantity: 1,
-            rate: 15750,
-            amount: 15750,
-            gstRate: 18,
-            gstAmount: 2835
-          }
-        ]
-      },
-      {
-        id: '3',
-        invoiceNumber: 'INV-003',
-        customerName: 'Startup Inc',
-        customerId: 'CUST-003',
-        amount: 8500,
-        gstAmount: 1530,
-        date: '2024-01-10',
-        dueDate: '2024-02-10',
-        status: InvoiceStatus.OVERDUE,
-        description: 'Design services',
-        items: [
-          {
-            id: '3',
-            description: 'UI/UX Design',
-            quantity: 1,
-            rate: 8500,
-            amount: 8500,
-            gstRate: 18,
-            gstAmount: 1530
-          }
-        ]
-      },
-      {
-        id: '4',
-        invoiceNumber: 'INV-004',
-        customerName: 'Digital Marketing Co',
-        customerId: 'CUST-004',
-        amount: 32000,
-        gstAmount: 5760,
-        date: '2024-01-08',
-        dueDate: '2024-02-08',
-        status: InvoiceStatus.DRAFT,
-        description: 'Marketing campaign',
-        items: [
-          {
-            id: '4',
-            description: 'Digital Marketing Campaign',
-            quantity: 1,
-            rate: 32000,
-            amount: 32000,
-            gstRate: 18,
-            gstAmount: 5760
-          }
-        ]
-      },
-      {
-        id: '5',
-        invoiceNumber: 'INV-005',
-        customerName: 'E-commerce Solutions',
-        customerId: 'CUST-005',
-        amount: 18500,
-        gstAmount: 3330,
-        date: '2024-01-05',
-        dueDate: '2024-02-05',
-        status: InvoiceStatus.SENT,
-        description: 'E-commerce platform development',
-        items: [
-          {
-            id: '5',
-            description: 'E-commerce Development',
-            quantity: 1,
-            rate: 18500,
-            amount: 18500,
-            gstRate: 18,
-            gstAmount: 3330
-          }
-        ]
-      }
-    ];
+    this.dummyInvoices = [];
   }
 
   /**
@@ -215,7 +132,8 @@ export class InvoiceService {
 
       switch (this.config.dataSource) {
         case 'dummy':
-          return this.dummyInvoices.find(invoice => invoice.id === id) || null;
+          // Fallback to database if dummy data is not available
+          return await this.getInvoiceFromDatabase(id);
         
         case 'database':
           return await this.getInvoiceFromDatabase(id);
@@ -241,7 +159,8 @@ export class InvoiceService {
 
       switch (this.config.dataSource) {
         case 'dummy':
-          return this.createDummyInvoice(invoice);
+          // Fallback to database if dummy data is not available
+          return await this.createInvoiceInDatabase(invoice);
         
         case 'database':
           return await this.createInvoiceInDatabase(invoice);
@@ -267,7 +186,8 @@ export class InvoiceService {
 
       switch (this.config.dataSource) {
         case 'dummy':
-          return this.updateDummyInvoice(id, updates);
+          // Fallback to database if dummy data is not available
+          return await this.updateInvoiceInDatabase(id, updates);
         
         case 'database':
           return await this.updateInvoiceInDatabase(id, updates);
@@ -293,7 +213,8 @@ export class InvoiceService {
 
       switch (this.config.dataSource) {
         case 'dummy':
-          return this.deleteDummyInvoice(id);
+          // Fallback to database if dummy data is not available
+          return await this.deleteInvoiceFromDatabase(id);
         
         case 'database':
           return await this.deleteInvoiceFromDatabase(id);
@@ -330,7 +251,7 @@ export class InvoiceService {
         pending: invoices.filter(inv => inv.status === InvoiceStatus.PENDING).length,
         overdue: invoices.filter(inv => inv.status === InvoiceStatus.OVERDUE).length,
         draft: invoices.filter(inv => inv.status === InvoiceStatus.DRAFT).length,
-        totalAmount: invoices.reduce((sum, inv) => sum + inv.amount, 0)
+        totalAmount: invoices.reduce((sum, inv) => sum + inv.total_amount, 0)
       };
     } catch (error) {
       logger.error('Error getting invoice stats:', error);
@@ -350,9 +271,8 @@ export class InvoiceService {
       if (filters.searchTerm) {
         const searchLower = filters.searchTerm.toLowerCase();
         filtered = filtered.filter(invoice => 
-          invoice.customerName.toLowerCase().includes(searchLower) ||
-          invoice.invoiceNumber.toLowerCase().includes(searchLower) ||
-          invoice.description?.toLowerCase().includes(searchLower)
+          invoice.org?.name.toLowerCase().includes(searchLower) ||
+          invoice.invoice_number.toLowerCase().includes(searchLower)
         );
       }
     }
@@ -360,100 +280,107 @@ export class InvoiceService {
     return filtered;
   }
 
-  private createDummyInvoice(invoice: Omit<Invoice, 'id' | 'invoiceNumber'>): Invoice {
-    const newId = (this.dummyInvoices.length + 1).toString();
-    const newInvoiceNumber = `INV-${String(newId).padStart(3, '0')}`;
-    
-    const newInvoice: Invoice = {
-      ...invoice,
-      id: newId,
-      invoiceNumber: newInvoiceNumber
-    };
-    
-    this.dummyInvoices.push(newInvoice);
-    return newInvoice;
-  }
+  // Dummy data methods removed - using database only
 
-  private updateDummyInvoice(id: string, updates: Partial<Invoice>): Invoice {
-    const index = this.dummyInvoices.findIndex(invoice => invoice.id === id);
-    if (index === -1) {
-      throw new Error(`Invoice with ID ${id} not found`);
-    }
-    
-    this.dummyInvoices[index] = { ...this.dummyInvoices[index], ...updates };
-    return this.dummyInvoices[index];
-  }
-
-  private deleteDummyInvoice(id: string): boolean {
-    const index = this.dummyInvoices.findIndex(invoice => invoice.id === id);
-    if (index === -1) {
-      return false;
-    }
-    
-    this.dummyInvoices.splice(index, 1);
-    return true;
-  }
-
-  // Database methods (to be implemented)
+  // Database methods
   private async getInvoicesFromDatabase(filters?: InvoiceFilters): Promise<Invoice[]> {
-    // TODO: Implement database queries using Prisma
-    logger.info('Database method not implemented yet, falling back to dummy data');
-    return this.getDummyInvoices(filters);
+    try {
+      console.log('InvoiceService: getInvoicesFromDatabase called with filters:', filters);
+      
+      // For browser environment, use IPC to communicate with main process
+      if (typeof window !== 'undefined' && (window as any).electronAPI) {
+        console.log('InvoiceService: Using IPC to fetch invoices with filters:', filters);
+        console.log('InvoiceService: electronAPI available:', !!(window as any).electronAPI);
+        console.log('InvoiceService: electronAPI.getInvoices available:', !!(window as any).electronAPI?.getInvoices);
+        
+        const result = await (window as any).electronAPI.getInvoices(filters);
+        console.log('InvoiceService: IPC result:', result);
+        
+        if (result.success) {
+          console.log('InvoiceService: Successfully fetched', result.data.length, 'invoices');
+          console.log('InvoiceService: First invoice sample:', result.data[0] ? {
+            id: result.data[0].invoice_id,
+            number: result.data[0].invoice_number,
+            customer: result.data[0].org?.name,
+            amount: result.data[0].total_amount
+          } : 'No invoices');
+          return result.data;
+        } else {
+          console.error('InvoiceService: IPC error:', result.error);
+          throw new Error(result.error);
+        }
+      }
+      
+      // Fallback to dummy data if IPC is not available
+      console.log('InvoiceService: IPC not available, falling back to dummy data');
+      console.log('InvoiceService: window available:', typeof window !== 'undefined');
+      console.log('InvoiceService: electronAPI available:', !!(window as any).electronAPI);
+      logger.info('IPC not available, falling back to dummy data');
+      return this.getDummyInvoices(filters);
+    } catch (error) {
+      console.error('InvoiceService: Error fetching invoices from database:', error);
+      logger.error('Error fetching invoices from database:', error);
+      // Fallback to dummy data on error
+      console.log('InvoiceService: Falling back to dummy data due to error');
+      return this.getDummyInvoices(filters);
+    }
   }
 
   private async getInvoiceFromDatabase(id: string): Promise<Invoice | null> {
     // TODO: Implement database query using Prisma
-    logger.info('Database method not implemented yet, falling back to dummy data');
-    return this.dummyInvoices.find(invoice => invoice.id === id) || null;
+    logger.info('Database getInvoiceFromDatabase method not implemented yet');
+    return null;
   }
 
   private async createInvoiceInDatabase(invoice: Omit<Invoice, 'id' | 'invoiceNumber'>): Promise<Invoice> {
     // TODO: Implement database creation using Prisma
-    logger.info('Database method not implemented yet, falling back to dummy data');
-    return this.createDummyInvoice(invoice);
+    logger.info('Database creation method not implemented yet');
+    throw new Error('Database creation method not implemented yet');
   }
 
   private async updateInvoiceInDatabase(id: string, updates: Partial<Invoice>): Promise<Invoice> {
     // TODO: Implement database update using Prisma
-    logger.info('Database method not implemented yet, falling back to dummy data');
-    return this.updateDummyInvoice(id, updates);
+    logger.info('Database update method not implemented yet');
+    throw new Error('Database update method not implemented yet');
   }
 
   private async deleteInvoiceFromDatabase(id: string): Promise<boolean> {
     // TODO: Implement database deletion using Prisma
-    logger.info('Database method not implemented yet, falling back to dummy data');
-    return this.deleteDummyInvoice(id);
+    logger.info('Database deletion method not implemented yet');
+    return false;
   }
 
   // API methods (to be implemented)
   private async getInvoicesFromAPI(filters?: InvoiceFilters): Promise<Invoice[]> {
     // TODO: Implement API calls
-    logger.info('API method not implemented yet, falling back to dummy data');
-    return this.getDummyInvoices(filters);
+    logger.info('API method not implemented yet, falling back to database');
+    return this.getInvoicesFromDatabase(filters);
   }
 
   private async getInvoiceFromAPI(id: string): Promise<Invoice | null> {
     // TODO: Implement API call
-    logger.info('API method not implemented yet, falling back to dummy data');
-    return this.dummyInvoices.find(invoice => invoice.id === id) || null;
+    logger.info('API method not implemented yet, falling back to database');
+    return this.getInvoiceFromDatabase(id);
   }
 
-  private async createInvoiceInAPI(invoice: Omit<Invoice, 'id' | 'invoiceNumber'>): Promise<Invoice> {
+  private async createInvoiceInAPI(invoice: Omit<Invoice, 'invoice_id' | 'invoice_number'>): Promise<Invoice> {
     // TODO: Implement API call
-    logger.info('API method not implemented yet, falling back to dummy data');
-    return this.createDummyInvoice(invoice);
+    logger.info('API method not implemented yet, falling back to database');
+    // Convert the invoice to the expected format
+    const convertedInvoice = invoice as Omit<Invoice, 'id' | 'invoiceNumber'>;
+    return this.createInvoiceInDatabase(convertedInvoice);
   }
 
   private async updateInvoiceInAPI(id: string, updates: Partial<Invoice>): Promise<Invoice> {
     // TODO: Implement API call
-    logger.info('API method not implemented yet, falling back to dummy data');
-    return this.updateDummyInvoice(id, updates);
+    logger.info('API method not implemented yet, falling back to database');
+    return this.updateInvoiceInDatabase(id, updates);
   }
 
   private async deleteInvoiceFromAPI(id: string): Promise<boolean> {
     // TODO: Implement API call
-    logger.info('API method not implemented yet, falling back to dummy data');
-    return this.deleteDummyInvoice(id);
+    logger.info('API method not implemented yet, falling back to database');
+    return this.deleteInvoiceFromDatabase(id);
   }
 
   /**
