@@ -4,7 +4,9 @@ module.exports = {
   mode: 'development',
   entry: {
     'RegistrationPage': './src/pages/RegistrationPage.ts',
-    'HomePage': './src/pages/HomePage.ts'
+    'HomePage': './src/pages/HomePage.ts',
+    'InvoicePage': './src/pages/InvoicePage.ts',
+    'InvoiceService': './src/services/InvoiceService.ts'
   },
   output: {
     path: path.resolve(__dirname, 'dist/pages-bundled'),

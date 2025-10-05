@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EZAccounting</title>
+    <link rel="stylesheet" href="invoice-styles.css">
     <style>
         * {
             margin: 0;
@@ -505,10 +506,10 @@
             </div>
 
             <div class="feature-grid">
-                <div class="feature-card" onclick="openFeature('transactions')">
-                    <div class="feature-icon">💳</div>
-                    <div class="feature-title">Transactions</div>
-                    <div class="feature-description">Manage your income and expenses</div>
+                <div class="feature-card" onclick="showInvoicePage()">
+                    <div class="feature-icon">📄</div>
+                    <div class="feature-title">Invoices</div>
+                    <div class="feature-description">Manage customer invoices and GST</div>
                 </div>
 
                 <div class="feature-card" onclick="openFeature('accounts')">
@@ -653,6 +654,63 @@
             checkBackendConnection();
             checkDatabaseConnection();
             loadConfigurationInfo();
+        }
+
+        async function showInvoicePage() {
+            // Hide the main app container
+            const appContainer = document.querySelector('.app-container');
+            if (appContainer) {
+                appContainer.style.display = 'none';
+            }
+            
+            // Remove registration container if it exists
+            const registrationContainer = document.getElementById('registration-container');
+            if (registrationContainer) {
+                registrationContainer.remove();
+            }
+            
+            // Create invoice page container
+            const invoicePageContainer = document.createElement('div');
+            invoicePageContainer.id = 'invoice-page-container';
+            document.body.appendChild(invoicePageContainer);
+            
+            try {
+                // Import components
+                const { InvoicePage } = await import('../pages-bundled/InvoicePage.js');
+                const { InvoiceService } = await import('../pages-bundled/InvoiceService.js');
+                
+                // Initialize invoice service with dummy data
+                const invoiceService = new InvoiceService({ dataSource: 'dummy' });
+                
+                // Create and render invoice page
+                const invoicePage = new InvoicePage({
+                    container: invoicePageContainer,
+                    invoiceService: invoiceService,
+                    showSidebar: true,
+                    onNavigate: (path) => {
+                        console.log('Navigate to:', path);
+                        // Handle navigation here
+                    }
+                });
+                
+                invoicePage.render();
+                console.log('InvoicePage rendered successfully');
+                
+                // Store reference for cleanup
+                window.currentInvoicePage = invoicePage;
+                
+            } catch (error) {
+                console.error('Failed to load InvoicePage:', error);
+                invoicePageContainer.innerHTML = `
+                    <div style="padding: 40px; text-align: center; color: #dc2626;">
+                        <h2>Error Loading Invoice Page</h2>
+                        <p>Failed to load invoice management interface: ${error.message}</p>
+                        <button onclick="showHomePage()" style="margin-top: 20px; padding: 10px 20px; background: #3b82f6; color: white; border: none; border-radius: 6px; cursor: pointer;">
+                            Back to Dashboard
+                        </button>
+                    </div>
+                `;
+            }
         }
 
         // Registration form is now handled by the RegistrationPage component
