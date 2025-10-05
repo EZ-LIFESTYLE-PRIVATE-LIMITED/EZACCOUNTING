@@ -1,78 +1,26 @@
 import { logger } from '../utils/logger';
+import { 
+  Invoice, 
+  Org, 
+  Item, 
+  InvoiceItem, 
+  InvoiceStatus, 
+  InvoiceFilters, 
+  InvoiceStats 
+} from '../types/database';
 
-// Types
-export interface Invoice {
-  invoice_id: number;
-  invoice_number: string;
-  org_id: number;
-  invoice_date: Date;
-  due_date: Date | null;
-  status: InvoiceStatus;
-  total_amount: number;
-  gst_amount: number;
-  net_amount: number;
-  created_at: Date;
-  updated_at: Date;
-  org?: Org;
-  invoice_items?: InvoiceItem[];
-}
+// Re-export types for backward compatibility
+export { 
+  Invoice, 
+  Org, 
+  Item, 
+  InvoiceItem, 
+  InvoiceStatus, 
+  InvoiceFilters, 
+  InvoiceStats 
+};
 
-export interface Org {
-  org_id: number;
-  name: string;
-  user_name: string | null;
-  gstin: string | null;
-  state: string | null;
-  city_state: string | null;
-  email: string | null;
-  phone: string | null;
-  business_address: string | null;
-  invoice_series: string | null;
-  signature_url: string | null;
-  org_type: 'BUSINESS' | 'CUSTOMER' | 'SUPPLIER';
-  created_at: Date;
-  updated_at: Date;
-}
-
-export interface InvoiceItem {
-  invoice_item_id: number;
-  invoice_id: number;
-  item_id: number;
-  quantity: number;
-  rate: number;
-  amount: number;
-  created_at: Date;
-  updated_at: Date;
-  item?: Item;
-}
-
-export interface Item {
-  item_id: number;
-  item_name: string;
-  item_description: string | null;
-  item_sku: string | null;
-  item_gst: number;
-  item_category: string | null;
-  created_at: Date;
-  updated_at: Date;
-}
-
-export enum InvoiceStatus {
-  DRAFT = 'DRAFT',
-  SENT = 'SENT',
-  PAID = 'PAID',
-  PENDING = 'PENDING',
-  OVERDUE = 'OVERDUE',
-  CANCELLED = 'CANCELLED'
-}
-
-export interface InvoiceFilters {
-  status?: InvoiceStatus;
-  customerId?: string;
-  dateFrom?: string;
-  dateTo?: string;
-  searchTerm?: string;
-}
+// Service-specific types
 
 export interface InvoiceServiceConfig {
   dataSource: 'dummy' | 'database' | 'api';
@@ -234,24 +182,17 @@ export class InvoiceService {
   /**
    * Get invoice statistics
    */
-  public async getInvoiceStats(): Promise<{
-    total: number;
-    paid: number;
-    pending: number;
-    overdue: number;
-    draft: number;
-    totalAmount: number;
-  }> {
+  public async getInvoiceStats(): Promise<InvoiceStats> {
     try {
       const invoices = await this.getInvoices();
       
       return {
         total: invoices.length,
-        paid: invoices.filter(inv => inv.status === InvoiceStatus.PAID).length,
-        pending: invoices.filter(inv => inv.status === InvoiceStatus.PENDING).length,
-        overdue: invoices.filter(inv => inv.status === InvoiceStatus.OVERDUE).length,
-        draft: invoices.filter(inv => inv.status === InvoiceStatus.DRAFT).length,
-        totalAmount: invoices.reduce((sum, inv) => sum + inv.total_amount, 0)
+        totalAmount: invoices.reduce((sum, inv) => sum + inv.total_amount, 0),
+        draft: invoices.filter(inv => inv.status === 'DRAFT').length,
+        sent: invoices.filter(inv => inv.status === 'SENT').length,
+        paid: invoices.filter(inv => inv.status === 'PAID').length,
+        overdue: invoices.filter(inv => inv.status === 'OVERDUE').length
       };
     } catch (error) {
       logger.error('Error getting invoice stats:', error);

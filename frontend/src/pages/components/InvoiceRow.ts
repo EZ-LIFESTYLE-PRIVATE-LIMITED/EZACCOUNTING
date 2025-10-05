@@ -1,4 +1,4 @@
-import { Invoice, InvoiceStatus } from '../../services/InvoiceService';
+import { Invoice, InvoiceStatus } from '../../types/database';
 
 // Types
 export interface InvoiceRowProps {
@@ -177,17 +177,15 @@ export class InvoiceRow {
    */
   private getStatusClass(status: InvoiceStatus): string {
     switch (status) {
-      case InvoiceStatus.PAID:
+      case 'PAID':
         return 'status-paid';
-      case InvoiceStatus.PENDING:
-        return 'status-pending';
-      case InvoiceStatus.OVERDUE:
+      case 'OVERDUE':
         return 'status-overdue';
-      case InvoiceStatus.DRAFT:
+      case 'DRAFT':
         return 'status-draft';
-      case InvoiceStatus.SENT:
+      case 'SENT':
         return 'status-sent';
-      case InvoiceStatus.CANCELLED:
+      case 'CANCELLED':
         return 'status-cancelled';
       default:
         return 'status-unknown';
@@ -199,17 +197,15 @@ export class InvoiceRow {
    */
   private getStatusText(status: InvoiceStatus): string {
     switch (status) {
-      case InvoiceStatus.PAID:
+      case 'PAID':
         return 'Paid';
-      case InvoiceStatus.PENDING:
-        return 'Pending';
-      case InvoiceStatus.OVERDUE:
+      case 'OVERDUE':
         return 'Overdue';
-      case InvoiceStatus.DRAFT:
+      case 'DRAFT':
         return 'Draft';
-      case InvoiceStatus.SENT:
+      case 'SENT':
         return 'Sent';
-      case InvoiceStatus.CANCELLED:
+      case 'CANCELLED':
         return 'Cancelled';
       default:
         return 'Unknown';
@@ -246,7 +242,7 @@ export class InvoiceRow {
     if (!this.invoice.due_date) return false;
     const dueDate = typeof this.invoice.due_date === 'string' ? new Date(this.invoice.due_date) : this.invoice.due_date;
     const today = new Date();
-    return dueDate < today && this.invoice.status !== InvoiceStatus.PAID;
+    return dueDate < today && this.invoice.status !== 'PAID';
   }
 
   /**

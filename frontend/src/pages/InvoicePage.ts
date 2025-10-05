@@ -1,4 +1,5 @@
-import { Invoice, InvoiceService, InvoiceStatus } from '../services/InvoiceService';
+import { InvoiceService } from '../services/InvoiceService';
+import { Invoice, InvoiceStatus } from '../types/database';
 import { Sidebar, NavigationItem } from './components/Sidebar';
 import { Header } from './components/Header';
 import { InvoiceList, InvoiceListProps } from './components/InvoiceList';

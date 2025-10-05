@@ -1,4 +1,5 @@
-import { Invoice, InvoiceService, InvoiceFilters, InvoiceStatus } from '../../services/InvoiceService';
+import { InvoiceService } from '../../services/InvoiceService';
+import { Invoice, InvoiceFilters, InvoiceStatus } from '../../types/database';
 import { InvoiceRow, InvoiceRowProps } from './InvoiceRow';
 
 // Types
@@ -128,12 +129,11 @@ export class InvoiceList {
             <label>Status</label>
             <select class="status-filter">
               <option value="">All Status</option>
-              <option value="DRAFT" ${this.state.filters.status === InvoiceStatus.DRAFT ? 'selected' : ''}>Draft</option>
-              <option value="SENT" ${this.state.filters.status === InvoiceStatus.SENT ? 'selected' : ''}>Sent</option>
-              <option value="PENDING" ${this.state.filters.status === InvoiceStatus.PENDING ? 'selected' : ''}>Pending</option>
-              <option value="PAID" ${this.state.filters.status === InvoiceStatus.PAID ? 'selected' : ''}>Paid</option>
-              <option value="OVERDUE" ${this.state.filters.status === InvoiceStatus.OVERDUE ? 'selected' : ''}>Overdue</option>
-              <option value="CANCELLED" ${this.state.filters.status === InvoiceStatus.CANCELLED ? 'selected' : ''}>Cancelled</option>
+              <option value="DRAFT" ${this.state.filters.status === 'DRAFT' ? 'selected' : ''}>Draft</option>
+              <option value="SENT" ${this.state.filters.status === 'SENT' ? 'selected' : ''}>Sent</option>
+              <option value="PAID" ${this.state.filters.status === 'PAID' ? 'selected' : ''}>Paid</option>
+              <option value="OVERDUE" ${this.state.filters.status === 'OVERDUE' ? 'selected' : ''}>Overdue</option>
+              <option value="CANCELLED" ${this.state.filters.status === 'CANCELLED' ? 'selected' : ''}>Cancelled</option>
             </select>
           </div>
           
