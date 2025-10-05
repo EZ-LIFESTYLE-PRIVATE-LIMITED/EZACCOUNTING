@@ -1,0 +1,174 @@
+// EZAccounting Prisma Schema
+// This schema defines the database structure for the EZAccounting application
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// Test table for verification
+model TestTable {
+  id         Int      @id @default(autoincrement())
+  name       String
+  value      String?
+  created_at DateTime @default(now())
+
+  @@map("test_table")
+}
+
+// Chart of accounts
+model Account {
+  id         Int      @id @default(autoincrement())
+  name       String
+  type       AccountType
+  balance    Float    @default(0.0)
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now()) @updatedAt
+
+  // Relations
+  transactions Transaction[]
+
+  @@map("accounts")
+}
+
+// Accounting transactions
+model Transaction {
+  id               Int             @id @default(autoincrement())
+  account_id       Int
+  description      String
+  amount           Float
+  transaction_type TransactionType
+  date             DateTime        @default(now())
+  created_at       DateTime        @default(now())
+
+  // Relations
+  account Account @relation(fields: [account_id], references: [id])
+
+  @@map("transactions")
+}
+
+// Organizations (Business, Customer, Supplier)
+model Org {
+  org_id           Int      @id @default(autoincrement())
+  name             String
+  user_name        String?  // User's full name
+  gstin            String?
+  state            String?
+  city_state       String?  // City/State combined field
+  email            String?
+  phone            String?
+  business_address String?  // Complete business address
+  invoice_series   String?  // Invoice series prefix (e.g., "INV-")
+  signature_url    String?
+  org_type         OrgType
+  created_at       DateTime @default(now())
+  updated_at       DateTime @default(now()) @updatedAt
+
+  // Relations
+  invoices Invoice[]
+
+  @@map("org")
+}
+
+// Items/Products
+model Item {
+  item_id          Int      @id @default(autoincrement())
+  item_name        String
+  item_description String?
+  item_sku         String?
+  item_gst         Float    @default(0.0)
+  item_category    String?
+  created_at       DateTime @default(now())
+  updated_at       DateTime @default(now()) @updatedAt
+
+  // Relations
+  invoice_items InvoiceItem[]
+
+  @@map("item")
+}
+
+// Invoices
+model Invoice {
+  invoice_id     Int      @id @default(autoincrement())
+  invoice_number String   @unique
+  org_id         Int
+  invoice_date   DateTime
+  due_date       DateTime?
+  status         InvoiceStatus @default(DRAFT)
+  total_amount   Float    @default(0.0)
+  gst_amount     Float    @default(0.0)
+  net_amount     Float    @default(0.0)
+  created_at     DateTime @default(now())
+  updated_at     DateTime @default(now()) @updatedAt
+
+  // Relations
+  org          Org           @relation(fields: [org_id], references: [org_id])
+  invoice_items InvoiceItem[]
+
+  @@map("invoice")
+}
+
+// Invoice line items
+model InvoiceItem {
+  invoice_item_id    Int      @id @default(autoincrement())
+  invoice_id         Int
+  item_id            Int
+  quantity           Float    @default(1.0)
+  item_total_amount  Float    @default(0.0)
+  item_gst_amount    Float    @default(0.0)
+  item_igst_amount   Float    @default(0.0)
+  item_cgst_amount   Float    @default(0.0)
+  item_sgst_amount   Float    @default(0.0)
+  item_net_amount    Float    @default(0.0)
+  created_at         DateTime @default(now())
+  updated_at         DateTime @default(now()) @updatedAt
+
+  // Relations
+  invoice Invoice @relation(fields: [invoice_id], references: [invoice_id], onDelete: Cascade)
+  item    Item    @relation(fields: [item_id], references: [item_id])
+
+  @@map("invoice_item")
+}
+
+// Migration tracking
+model Migration {
+  id          Int      @id @default(autoincrement())
+  version     Int      @unique
+  name        String
+  executed_at DateTime @default(now())
+
+  @@map("migrations")
+}
+
+// Enums
+enum AccountType {
+  asset
+  liability
+  equity
+  income
+  expense
+}
+
+enum TransactionType {
+  debit
+  credit
+}
+
+enum OrgType {
+  BUSINESS
+  CUSTOMER
+  SUPPLIER
+}
+
+enum InvoiceStatus {
+  DRAFT
+  SENT
+  PAID
+  OVERDUE
+  CANCELLED
+}
