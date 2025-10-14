@@ -12,7 +12,7 @@ services:
       - app-network
 
   # Frontend service removed - Electron desktop apps should run locally
-  # Use: cd frontend && npm run start:dev
+  # Use: cd frontend; npm run start:dev
 
   postgres:
     image: postgres:15

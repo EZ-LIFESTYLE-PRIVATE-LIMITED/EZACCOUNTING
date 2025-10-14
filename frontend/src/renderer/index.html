@@ -166,6 +166,268 @@
             opacity: 0.5;
             cursor: not-allowed;
         }
+
+        /* Registration Form Styles */
+        .registration-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .registration-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            max-width: 600px;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        .registration-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+        }
+
+        .header-icon {
+            font-size: 3rem;
+            margin-bottom: 20px;
+        }
+
+        .registration-header h1 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .registration-header p {
+            font-size: 1rem;
+            opacity: 0.9;
+            line-height: 1.5;
+        }
+
+        .registration-form-container {
+            padding: 40px 30px;
+        }
+
+        .registration-form {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .form-group label {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #333;
+            font-size: 0.9rem;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            padding: 12px 16px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            font-family: inherit;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .input-with-icon {
+            position: relative;
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.2rem;
+            color: #666;
+            pointer-events: none;
+        }
+
+        .input-with-icon input {
+            padding-left: 40px;
+        }
+
+        .signature-section {
+            border: 2px dashed #e1e5e9;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            background: #f8f9fa;
+        }
+
+        .signature-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .signature-icon {
+            font-size: 1.5rem;
+            margin-right: 10px;
+        }
+
+        .signature-header h3 {
+            font-size: 1.1rem;
+            color: #333;
+            margin: 0;
+        }
+
+        .signature-upload {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .upload-info p {
+            margin: 0;
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .upload-formats {
+            font-size: 0.8rem !important;
+            color: #999 !important;
+        }
+
+        .file-upload-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .file-upload-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background-color 0.2s;
+        }
+
+        .file-upload-btn:hover {
+            background: #5a6fd8;
+        }
+
+        .file-name {
+            color: #666;
+            font-size: 0.9rem;
+            font-style: italic;
+        }
+
+        .message {
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin: 20px 0;
+            font-weight: 500;
+        }
+
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .form-actions {
+            margin-top: 30px;
+            text-align: center;
+        }
+
+        .submit-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            min-width: 200px;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .submit-btn:disabled {
+            transform: none;
+            box-shadow: none;
+            opacity: 0.7;
+        }
+
+        .loading-spinner {
+            margin-left: 10px;
+            animation: spin 1s linear infinite;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .registration-container {
+                padding: 10px;
+            }
+
+            .registration-header {
+                padding: 30px 20px;
+            }
+
+            .registration-form-container {
+                padding: 30px 20px;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+
+            .file-upload-container {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -189,6 +451,57 @@
                 <button id="refresh-btn" onclick="checkBackendConnection()" style="margin-top: 10px;">
                     Refresh Connection
                 </button>
+            </div>
+
+            <div class="status-card">
+                <h3>SQLite Database Status</h3>
+                <div id="database-status">
+                    <span class="status-indicator status-disconnected" id="db-status-indicator"></span>
+                    <span id="db-status-text">Checking database connection...</span>
+                </div>
+                <div class="loading" id="db-loading">
+                    <div class="spinner"></div>
+                    <p>Checking database...</p>
+                </div>
+                <div style="margin-top: 15px;">
+                    <button id="test-db-btn" onclick="testDatabaseOperations()" style="margin-right: 10px;">
+                        Test Database
+                    </button>
+                    <button id="add-test-record-btn" onclick="addTestRecord()" style="margin-right: 10px;">
+                        Add Test Record
+                    </button>
+                    <button id="view-records-btn" onclick="viewTestRecords()">
+                        View Records
+                    </button>
+                </div>
+                <div id="db-results" style="margin-top: 15px; padding: 10px; background: #f8f9fa; border-radius: 5px; display: none;">
+                    <h4>Database Results:</h4>
+                    <pre id="db-results-content"></pre>
+                </div>
+            </div>
+
+            <div class="status-card">
+                <h3>Configuration Settings</h3>
+                <div id="config-info">
+                    <div style="margin-bottom: 10px;">
+                        <strong>Backend URL:</strong> <span id="backend-url-display">Loading...</span>
+                    </div>
+                    <div style="margin-bottom: 10px;">
+                        <strong>Database Path:</strong> <span id="db-path-display">Loading...</span>
+                    </div>
+                    <div style="margin-bottom: 10px;">
+                        <strong>User Data Directory:</strong> <span id="user-data-display">Loading...</span>
+                    </div>
+                    <div style="margin-top: 15px;">
+                        <button id="show-config-btn" onclick="showConfigurationInfo()">
+                            Show Full Configuration
+                        </button>
+                    </div>
+                </div>
+                <div id="config-results" style="margin-top: 15px; padding: 10px; background: #f8f9fa; border-radius: 5px; display: none;">
+                    <h4>Configuration Details:</h4>
+                    <pre id="config-results-content"></pre>
+                </div>
             </div>
 
             <div class="feature-grid">
@@ -225,9 +538,126 @@
 
     <script>
         // Check backend connection on load
-        window.addEventListener('DOMContentLoaded', () => {
-            checkBackendConnection();
+        window.addEventListener('DOMContentLoaded', async () => {
+            // Check if this is a registration page
+            const urlParams = new URLSearchParams(window.location.search);
+            const isRegistration = urlParams.get('registration') === 'true';
+            
+            if (isRegistration) {
+                await showRegistrationPage();
+            } else {
+                // Check if this is a first-time user
+                console.log('Checking first-time user status...');
+                const isFirstTime = await window.electronAPI.checkFirstTimeUser();
+                console.log('Is first-time user:', isFirstTime);
+                if (isFirstTime) {
+                    console.log('Showing registration page');
+                    await showRegistrationPage();
+                } else {
+                    console.log('Showing home page');
+                    await showHomePage();
+                }
+            }
         });
+
+        async function showRegistrationPage() {
+            // Hide the main app container
+            const appContainer = document.querySelector('.app-container');
+            if (appContainer) {
+                appContainer.style.display = 'none';
+            }
+            
+            // Create registration container
+            const registrationContainer = document.createElement('div');
+            registrationContainer.id = 'registration-container';
+            document.body.appendChild(registrationContainer);
+            
+            // Use the proper TypeScript component
+            console.log('Attempting to import RegistrationPage from: ../pages/RegistrationPage.js');
+            console.log('Current location:', window.location.href);
+            console.log('Current pathname:', window.location.pathname);
+            
+            // Try different import paths - using the bundled RegistrationPage
+            const possiblePaths = [
+                '../pages-bundled/RegistrationPage.js',
+                './pages-bundled/RegistrationPage.js',
+                '/pages-bundled/RegistrationPage.js',
+                'file:///D:/Project/EZAccounting/frontend/dist/pages-bundled/RegistrationPage.js'
+            ];
+            
+            console.log('Will try these paths:', possiblePaths);
+            
+            let RegistrationPage = null;
+            let importError = null;
+            
+            // Try each possible path
+            for (const path of possiblePaths) {
+                try {
+                    console.log(`Trying to import from: ${path}`);
+                    const module = await import(path);
+                    RegistrationPage = module.RegistrationPage;
+                    console.log(`Successfully imported RegistrationPage from: ${path}`);
+                    break;
+                } catch (error) {
+                    console.log(`Failed to import from ${path}:`, error.message);
+                    importError = error;
+                }
+            }
+            
+            if (RegistrationPage) {
+                try {
+                    const registrationPage = new RegistrationPage(registrationContainer);
+                    registrationPage.render();
+                    console.log('RegistrationPage rendered successfully');
+                } catch (error) {
+                    console.error('Failed to render RegistrationPage:', error);
+                    importError = error;
+                }
+            } else {
+                console.error('Failed to import RegistrationPage from any path');
+            }
+            
+            if (importError) {
+                console.error('Failed to import RegistrationPage:', importError);
+                console.error('Error details:', {
+                    message: importError.message,
+                    stack: importError.stack,
+                    name: importError.name
+                });
+                
+                // Fallback: show error message
+                registrationContainer.innerHTML = `
+                    <div style="padding: 20px; color: red;">
+                        <h2>Error Loading Registration Page</h2>
+                        <p>Failed to load registration component: ${importError.message}</p>
+                        <p>Please check the console for more details.</p>
+                    </div>
+                `;
+            }
+        }
+
+        async function showHomePage() {
+            // Show the main app container
+            const appContainer = document.querySelector('.app-container');
+            if (appContainer) {
+                appContainer.style.display = 'flex';
+            }
+            
+            // Remove registration container if it exists
+            const registrationContainer = document.getElementById('registration-container');
+            if (registrationContainer) {
+                registrationContainer.remove();
+            }
+            
+            // Initialize home page
+            checkBackendConnection();
+            checkDatabaseConnection();
+            loadConfigurationInfo();
+        }
+
+        // Registration form is now handled by the RegistrationPage component
+
+        // All registration form logic is now handled by the RegistrationPage component
 
         async function checkBackendConnection() {
             const statusIndicator = document.getElementById('status-indicator');
@@ -260,6 +690,179 @@
         function openFeature(feature) {
             // This would open different views/panels based on the feature
             alert(`Opening ${feature} feature...\n\nThis functionality will be implemented in the next version.`);
+        }
+
+        // Database functions
+        async function checkDatabaseConnection() {
+            const statusIndicator = document.getElementById('db-status-indicator');
+            const statusText = document.getElementById('db-status-text');
+            const loading = document.getElementById('db-loading');
+
+            loading.style.display = 'block';
+
+            try {
+                const isConnected = await window.electronAPI.dbIsConnected();
+                
+                if (isConnected) {
+                    statusIndicator.className = 'status-indicator status-connected';
+                    statusText.textContent = 'SQLite database connected successfully';
+                } else {
+                    statusIndicator.className = 'status-indicator status-disconnected';
+                    statusText.textContent = 'SQLite database not connected';
+                }
+            } catch (error) {
+                statusIndicator.className = 'status-indicator status-disconnected';
+                statusText.textContent = `Database error: ${error.message}`;
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        async function testDatabaseOperations() {
+            const resultsDiv = document.getElementById('db-results');
+            const resultsContent = document.getElementById('db-results-content');
+            const testBtn = document.getElementById('test-db-btn');
+
+            testBtn.disabled = true;
+            resultsDiv.style.display = 'block';
+            resultsContent.textContent = 'Testing database operations...';
+
+            try {
+                // Get database info
+                const dbInfo = await window.electronAPI.dbGetDatabaseInfo();
+                
+                if (dbInfo.success) {
+                    resultsContent.textContent = JSON.stringify({
+                        databaseInfo: dbInfo.info,
+                        message: 'Database test successful!'
+                    }, null, 2);
+                } else {
+                    resultsContent.textContent = `Database test failed: ${dbInfo.error}`;
+                }
+            } catch (error) {
+                resultsContent.textContent = `Error testing database: ${error.message}`;
+            } finally {
+                testBtn.disabled = false;
+            }
+        }
+
+        async function addTestRecord() {
+            const resultsDiv = document.getElementById('db-results');
+            const resultsContent = document.getElementById('db-results-content');
+            const addBtn = document.getElementById('add-test-record-btn');
+
+            addBtn.disabled = true;
+            resultsDiv.style.display = 'block';
+            resultsContent.textContent = 'Adding test record...';
+
+            try {
+                const timestamp = new Date().toISOString();
+                const result = await window.electronAPI.dbInsertTestRecord(
+                    `Test Record ${timestamp}`,
+                    `Value ${Math.random().toString(36).substr(2, 9)}`
+                );
+                
+                if (result.success) {
+                    resultsContent.textContent = JSON.stringify({
+                        message: 'Test record added successfully!',
+                        recordId: result.id,
+                        timestamp: timestamp
+                    }, null, 2);
+                } else {
+                    resultsContent.textContent = `Failed to add test record: ${result.error}`;
+                }
+            } catch (error) {
+                resultsContent.textContent = `Error adding test record: ${error.message}`;
+            } finally {
+                addBtn.disabled = false;
+            }
+        }
+
+        async function viewTestRecords() {
+            const resultsDiv = document.getElementById('db-results');
+            const resultsContent = document.getElementById('db-results-content');
+            const viewBtn = document.getElementById('view-records-btn');
+
+            viewBtn.disabled = true;
+            resultsDiv.style.display = 'block';
+            resultsContent.textContent = 'Loading test records...';
+
+            try {
+                const result = await window.electronAPI.dbGetTestRecords();
+                
+                if (result.success) {
+                    resultsContent.textContent = JSON.stringify({
+                        message: 'Test records retrieved successfully!',
+                        count: result.data.length,
+                        records: result.data
+                    }, null, 2);
+                } else {
+                    resultsContent.textContent = `Failed to get test records: ${result.error}`;
+                }
+            } catch (error) {
+                resultsContent.textContent = `Error getting test records: ${error.message}`;
+            } finally {
+                viewBtn.disabled = false;
+            }
+        }
+
+        // Configuration functions
+        async function loadConfigurationInfo() {
+            try {
+                const config = await window.electronAPI.getConfigInfo();
+                
+                document.getElementById('backend-url-display').textContent = config.backendUrl;
+                document.getElementById('db-path-display').textContent = config.databasePath;
+                document.getElementById('user-data-display').textContent = config.userDataPath;
+            } catch (error) {
+                console.error('Error loading configuration:', error);
+                document.getElementById('backend-url-display').textContent = 'Error loading config';
+                document.getElementById('db-path-display').textContent = 'Error loading config';
+                document.getElementById('user-data-display').textContent = 'Error loading config';
+            }
+        }
+
+        async function showConfigurationInfo() {
+            const resultsDiv = document.getElementById('config-results');
+            const resultsContent = document.getElementById('config-results-content');
+            const showBtn = document.getElementById('show-config-btn');
+
+            showBtn.disabled = true;
+            resultsDiv.style.display = 'block';
+            resultsContent.textContent = 'Loading configuration...';
+
+            try {
+                const config = await window.electronAPI.getConfigInfo();
+                
+                resultsContent.textContent = JSON.stringify({
+                    message: 'Configuration loaded successfully!',
+                    configuration: {
+                        backendUrl: config.backendUrl,
+                        databasePath: config.databasePath,
+                        databaseName: config.databaseName,
+                        userDataPath: config.userDataPath,
+                        isCustomDbPath: config.isCustomDbPath,
+                        isCustomBackendUrl: config.isCustomBackendUrl
+                    },
+                    environmentVariables: {
+                        EZACCOUNTING_BACKEND_URL: 'Set to customize backend URL',
+                        EZACCOUNTING_DB_PATH: 'Set to customize database path',
+                        EZACCOUNTING_DB_NAME: 'Set to customize database name',
+                        BACKEND_URL: 'Alternative backend URL variable',
+                        DATABASE_PATH: 'Alternative database path variable',
+                        DATABASE_NAME: 'Alternative database name variable'
+                    },
+                    usage: {
+                        windows: 'set EZACCOUNTING_BACKEND_URL=http://your-backend:3000 && EZAccounting.exe',
+                        linux: 'EZACCOUNTING_BACKEND_URL=http://your-backend:3000 ./EZAccounting',
+                        mac: 'EZACCOUNTING_BACKEND_URL=http://your-backend:3000 ./EZAccounting.app'
+                    }
+                }, null, 2);
+            } catch (error) {
+                resultsContent.textContent = `Error loading configuration: ${error.message}`;
+            } finally {
+                showBtn.disabled = false;
+            }
         }
     </script>
 </body>
