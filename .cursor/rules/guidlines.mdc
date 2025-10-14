@@ -1,0 +1,23 @@
+---
+description: Guidelines to prevent mistakes
+globs:
+  - "**/*"
+alwaysApply: true
+---
+
+- when: runningCommand
+  then:
+    - message: |
+        SUPER CRITICAL: Don't use Cursor (Dev Server) terminal. 
+        Always run `cd frontend` **before any frontend command** (like `cd frontend; npm run start:dev`).
+        CRITICAL: Use the SAME terminal for all commands! Do not switch between "Cursor" and "Cursor (Dev Server)" terminals,
+        because `cd frontend` only affects the terminal where it was executed.
+
+- when: editing
+  then:
+    - message: |
+        Follow industry-level coding practices.
+        Update `README.md` and `memory-bank.md` whenever relevant changes are made.
+        Ask for admin permissions if required before proceeding.
+        Whenever possible use docker based approach.
+        Dont add tests for everyting it makes the app bulky
