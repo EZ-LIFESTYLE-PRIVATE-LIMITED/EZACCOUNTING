@@ -22,6 +22,9 @@ export class RegistrationPage {
           
           <div class="registration-form-container">
             ${RegistrationForm.render()}
+            <div style="margin-top: 20px; text-align: center; font-size: 14px;">
+              <a href="#" id="go-to-login" style="color: #667eea; text-decoration: none; font-weight: 500;">Already have an account? Login instead</a>
+            </div>
           </div>
         </div>
       </div>
@@ -42,6 +45,16 @@ export class RegistrationPage {
     const fileInput = this.container.querySelector('#signature-file') as HTMLInputElement;
     if (fileInput) {
       fileInput.addEventListener('change', this.handleFileUpload.bind(this));
+    }
+
+    const loginLink = this.container.querySelector('#go-to-login');
+    if (loginLink) {
+      loginLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        if (typeof (window as any).showLoginPage === 'function') {
+          (window as any).showLoginPage();
+        }
+      });
     }
   }
 
@@ -87,6 +100,8 @@ export class RegistrationPage {
     const registrationData = {
       userName: formData.get('userName') as string,
       organizationName: formData.get('organizationName') as string,
+      email: formData.get('email') as string,
+      password: formData.get('password') as string,
       gstin: formData.get('gstin') as string,
       mobileNumber: formData.get('mobileNumber') as string,
       cityState: formData.get('cityState') as string,
@@ -114,11 +129,11 @@ export class RegistrationPage {
       
       if (result.success) {
         this.showSuccessMessage();
-        // Redirect to main dashboard after a short delay
+        // Redirect to invoice page after a short delay
         setTimeout(() => {
-          // Call the global showHomePage function
-          if (typeof (window as any).showHomePage === 'function') {
-            (window as any).showHomePage();
+          // Call the global showInvoicePage function
+          if (typeof (window as any).showInvoicePage === 'function') {
+            (window as any).showInvoicePage();
           } else {
             // Fallback to page reload
             window.location.reload();
@@ -163,6 +178,8 @@ export class RegistrationPage {
     const requiredFields = [
       { field: 'userName', name: 'Your Name' },
       { field: 'organizationName', name: 'Organization Name' },
+      { field: 'email', name: 'Email Address' },
+      { field: 'password', name: 'Password' },
       { field: 'gstin', name: 'GSTIN' },
       { field: 'mobileNumber', name: 'Mobile Number' },
       { field: 'cityState', name: 'City / State' },
@@ -188,6 +205,12 @@ export class RegistrationPage {
       return false;
     }
 
+    // Validate email
+    if (!this.validateEmail(data.email)) {
+      this.showErrorMessage('Please enter a valid email address');
+      return false;
+    }
+
     return true;
   }
 
@@ -205,6 +228,14 @@ export class RegistrationPage {
   private validateMobileNumber(mobile: string): boolean {
     const mobileRegex = /^[6-9]\d{9}$/;
     return mobileRegex.test(mobile.replace(/\D/g, ''));
+  }
+
+  /**
+   * Validate email address
+   */
+  private validateEmail(email: string): boolean {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
   }
 
   /**
@@ -268,7 +299,7 @@ export class RegistrationPage {
     const messageDiv = this.container.querySelector('#message') as HTMLElement;
     if (messageDiv) {
       messageDiv.className = 'message success';
-      messageDiv.textContent = 'Registration completed successfully! Redirecting to dashboard...';
+      messageDiv.textContent = 'Registration completed successfully! Loading invoice page...';
       messageDiv.style.display = 'block';
     }
   }

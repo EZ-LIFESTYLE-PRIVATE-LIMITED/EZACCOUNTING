@@ -23,24 +23,15 @@ export function getDatabaseConfig(): DatabaseConfig {
   let databasePath: string;
   let isCustomPath = false;
   
-  if (process.env.EZACCOUNTING_DB_PATH || process.env.DATABASE_PATH) {
-    // Use custom database path if provided
-    const customPath = process.env.EZACCOUNTING_DB_PATH || process.env.DATABASE_PATH || '';
-    if (customPath) {
-      isCustomPath = true;
-      if (path.isAbsolute(customPath)) {
-        databasePath = path.join(customPath, databaseName);
-      } else {
-        // If relative path, make it relative to user data directory
-        databasePath = path.join(userDataPath, customPath, databaseName);
-      }
-    } else {
-      databasePath = path.join(userDataPath, databaseName);
-    }
-  } else {
-    // Default: use local dev.db file (same as Prisma)
+  const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged || process.argv.includes('--dev');
+
+  if (isDev) {
+    // In development mode, ONLY use the Prisma folder mapping so it matches the Prisma CLI path explicitly
     databasePath = path.join(process.cwd(), 'prisma', databaseName);
     isCustomPath = true;
+  } else {
+    // In production mode, always drop the data into OS AppData so it doesn't wipe across updates
+    databasePath = path.join(userDataPath, databaseName);
   }
 
   return {
