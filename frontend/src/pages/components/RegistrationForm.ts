@@ -31,6 +31,30 @@ export class RegistrationForm {
 
         <div class="form-row">
           <div class="form-group">
+            <label for="email">Email Address</label>
+            <input 
+              type="email" 
+              id="email" 
+              name="email" 
+              placeholder="Enter login email"
+              required
+            />
+          </div>
+          
+          <div class="form-group">
+            <label for="password">Password</label>
+            <input 
+              type="password" 
+              id="password" 
+              name="password" 
+              placeholder="Enter login password"
+              required
+            />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
             <label for="gstin">GSTIN</label>
             <input 
               type="text" 

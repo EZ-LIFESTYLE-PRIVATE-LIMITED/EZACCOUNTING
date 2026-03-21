@@ -61,6 +61,13 @@ export class Sidebar {
         active: currentPath === '/vendors'
       },
       {
+        id: 'profile',
+        label: 'Profile',
+        icon: '👤',
+        path: '/profile',
+        active: currentPath === '/profile'
+      },
+      {
         id: 'gst-report',
         label: 'GST Report',
         icon: '📊',
@@ -113,17 +120,50 @@ export class Sidebar {
               <p class="user-role">Account Owner</p>
             </div>
           </div>
+          <button class="logout-btn" id="logout-btn" title="Logout">
+            <span class="logout-icon">🚪</span>
+            <span class="logout-text">Logout</span>
+          </button>
         </div>
       </div>
+      
+      <style>
+        .logout-btn {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          width: 100%;
+          padding: 12px 16px;
+          margin-top: 12px;
+          background: rgba(220, 53, 69, 0.1);
+          border: 1px solid rgba(220, 53, 69, 0.2);
+          border-radius: 8px;
+          color: #dc3545;
+          font-size: 14px;
+          font-weight: 500;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+        
+        .logout-btn:hover {
+          background: rgba(220, 53, 69, 0.2);
+          border-color: rgba(220, 53, 69, 0.3);
+        }
+        
+        .logout-icon {
+          font-size: 16px;
+        }
+      </style>
     `;
   }
+
 
   /**
    * Get individual navigation item HTML
    */
   private getNavigationItemHTML(item: NavigationItem): string {
     const activeClass = item.active ? 'active' : '';
-    
+
     return `
       <li class="nav-item ${activeClass}" data-path="${item.path}">
         <button class="nav-link" type="button">
@@ -139,20 +179,40 @@ export class Sidebar {
    */
   private attachEventListeners(): void {
     const navLinks = this.container.querySelectorAll('.nav-link');
-    
+
     navLinks.forEach(link => {
       link.addEventListener('click', (event) => {
         event.preventDefault();
-      const button = event.currentTarget as HTMLButtonElement;
-      const navItem = button.closest('.nav-item') as HTMLElement;
-      const path = navItem?.getAttribute('data-path');
-        
+        const button = event.currentTarget as HTMLButtonElement;
+        const navItem = button.closest('.nav-item') as HTMLElement;
+        const path = navItem?.getAttribute('data-path');
+
         if (path && this.onNavigate) {
           this.handleNavigation(path);
         }
       });
     });
+
+    // Logout button
+    const logoutBtn = this.container.querySelector('#logout-btn');
+    logoutBtn?.addEventListener('click', async () => {
+      // By-passing native 'confirm()' because Chromium has a known bug on Windows 
+      // where native modals trap pointer-event cursors causing all inputs to freeze indefinitely.
+      try {
+        await (window as any).electronAPI.logout();
+        
+        // Let the index.html router handle the drop back to the Login display natively.
+        if (this.onNavigate) {
+          this.onNavigate('/logout');
+        } else {
+          window.location.reload();
+        }
+      } catch (error) {
+        console.error('Logout failed:', error);
+      }
+    });
   }
+
 
   /**
    * Handle navigation click
@@ -160,7 +220,7 @@ export class Sidebar {
   private handleNavigation(path: string): void {
     // Update active state
     this.updateActiveItem(path);
-    
+
     // Call navigation callback
     if (this.onNavigate) {
       this.onNavigate(path);
@@ -172,7 +232,7 @@ export class Sidebar {
    */
   private updateActiveItem(activePath: string): void {
     const navItems = this.container.querySelectorAll('.nav-item');
-    
+
     navItems.forEach(item => {
       const path = item.getAttribute('data-path');
       if (path === activePath) {
@@ -259,7 +319,7 @@ export class Sidebar {
         const button = event.currentTarget as HTMLButtonElement;
         const navItem = button.closest('.nav-item') as HTMLElement;
         const path = navItem?.getAttribute('data-path');
-        
+
         if (path && this.onNavigate) {
           this.handleNavigation(path);
         }

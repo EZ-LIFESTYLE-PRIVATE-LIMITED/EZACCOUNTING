@@ -65,6 +65,7 @@ export interface Item {
   item_description: string | null;
   item_sku: string | null;
   item_gst: number;
+  item_unit_price: number;
   item_category: string | null;
   created_at: Date;
   updated_at: Date;
@@ -75,8 +76,10 @@ export interface InvoiceItem {
   invoice_id: number;
   item_id: number;
   quantity: number;
-  rate: number;
-  amount: number;
+  unit_price: number;
+  item_total_amount: number;
+  item_gst_amount: number;
+  item_net_amount: number;
   created_at: Date;
   updated_at: Date;
   item?: Item;
@@ -92,6 +95,7 @@ export interface Invoice {
   total_amount: number;
   gst_amount: number;
   net_amount: number;
+  notes?: string | null;
   created_at: Date;
   updated_at: Date;
   org?: Org;

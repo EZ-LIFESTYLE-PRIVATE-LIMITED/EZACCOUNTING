@@ -62,6 +62,7 @@ model Org {
   city_state       String?  // City/State combined field
   email            String?
   phone            String?
+  password         String?
   business_address String?  // Complete business address
   invoice_series   String?  // Invoice series prefix (e.g., "INV-")
   signature_url    String?
@@ -70,7 +71,8 @@ model Org {
   updated_at       DateTime @default(now()) @updatedAt
 
   // Relations
-  invoices Invoice[]
+  invoices  Invoice[]
+  purchases Purchase[]
 
   @@map("org")
 }
@@ -81,13 +83,16 @@ model Item {
   item_name        String
   item_description String?
   item_sku         String?
+  item_hsn         String?
   item_gst         Float    @default(0.0)
+  item_unit_price  Float    @default(0.0)
   item_category    String?
   created_at       DateTime @default(now())
   updated_at       DateTime @default(now()) @updatedAt
 
   // Relations
-  invoice_items InvoiceItem[]
+  invoice_items  InvoiceItem[]
+  purchase_items PurchaseItem[]
 
   @@map("item")
 }
@@ -103,6 +108,7 @@ model Invoice {
   total_amount   Float    @default(0.0)
   gst_amount     Float    @default(0.0)
   net_amount     Float    @default(0.0)
+  notes          String?
   created_at     DateTime @default(now())
   updated_at     DateTime @default(now()) @updatedAt
 
@@ -171,4 +177,53 @@ enum InvoiceStatus {
   PAID
   OVERDUE
   CANCELLED
+}
+
+enum PurchaseStatus {
+  DRAFT
+  RECEIVED
+  PAID
+  CANCELLED
+}
+
+// Purchases (from vendors/suppliers)
+model Purchase {
+  purchase_id     Int            @id @default(autoincrement())
+  purchase_number String         @unique
+  org_id          Int
+  purchase_date   DateTime
+  due_date        DateTime?
+  status          PurchaseStatus @default(DRAFT)
+  total_amount    Float          @default(0.0)
+  gst_amount      Float          @default(0.0)
+  net_amount      Float          @default(0.0)
+  notes           String?
+  created_at      DateTime       @default(now())
+  updated_at      DateTime       @default(now()) @updatedAt
+
+  // Relations
+  org            Org            @relation(fields: [org_id], references: [org_id])
+  purchase_items PurchaseItem[]
+
+  @@map("purchase")
+}
+
+// Purchase line items
+model PurchaseItem {
+  purchase_item_id  Int      @id @default(autoincrement())
+  purchase_id       Int
+  item_id           Int
+  quantity          Float    @default(1.0)
+  unit_price        Float    @default(0.0)
+  item_total_amount Float    @default(0.0)
+  item_gst_amount   Float    @default(0.0)
+  item_net_amount   Float    @default(0.0)
+  created_at        DateTime @default(now())
+  updated_at        DateTime @default(now()) @updatedAt
+
+  // Relations
+  purchase Purchase @relation(fields: [purchase_id], references: [purchase_id], onDelete: Cascade)
+  item     Item     @relation(fields: [item_id], references: [item_id])
+
+  @@map("purchase_item")
 }

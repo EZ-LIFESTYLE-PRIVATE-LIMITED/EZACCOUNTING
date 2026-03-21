@@ -3,6 +3,8 @@ import { Invoice, InvoiceStatus } from '../types/database';
 import { Sidebar, NavigationItem } from './components/Sidebar';
 import { Header } from './components/Header';
 import { InvoiceList, InvoiceListProps } from './components/InvoiceList';
+import { InvoiceForm, InvoiceFormData } from './components/InvoiceForm';
+
 
 // Types
 export interface InvoicePageProps {
@@ -26,12 +28,12 @@ export class InvoicePage {
   private container: HTMLElement;
   private props: InvoicePageProps;
   private state: InvoicePageState;
-  
+
   // Child components
   private sidebar: Sidebar | null = null;
   private header: Header | null = null;
   private invoiceList: InvoiceList | null = null;
-  
+
   // Services
   private invoiceService: InvoiceService;
 
@@ -134,7 +136,7 @@ export class InvoicePage {
   private attachEventListeners(): void {
     // Global keyboard shortcuts
     document.addEventListener('keydown', this.handleKeydown.bind(this));
-    
+
     // Window resize handling
     window.addEventListener('resize', this.handleResize.bind(this));
   }
@@ -174,7 +176,7 @@ export class InvoicePage {
    */
   private handleCreateInvoice(): void {
     console.log('Create invoice clicked');
-    
+
     // Show loading state on create button
     if (this.header) {
       this.header.setCreateButtonLoading(true);
@@ -185,7 +187,7 @@ export class InvoicePage {
       if (this.header) {
         this.header.setCreateButtonLoading(false);
       }
-      
+
       // Here you would typically open a create invoice modal
       this.showCreateInvoiceModal();
     }, 1000);
@@ -196,7 +198,7 @@ export class InvoicePage {
    */
   private handleViewInvoice(invoice: Invoice): void {
     console.log('View invoice:', invoice);
-    
+
     // Here you would typically open an invoice view modal or navigate to detail page
     this.showInvoiceDetailModal(invoice);
   }
@@ -206,7 +208,7 @@ export class InvoicePage {
    */
   private handleEditInvoice(invoice: Invoice): void {
     console.log('Edit invoice:', invoice);
-    
+
     // Here you would typically open an edit invoice modal
     this.showEditInvoiceModal(invoice);
   }
@@ -216,7 +218,7 @@ export class InvoicePage {
    */
   private handleDeleteInvoice(invoice: Invoice): void {
     console.log('Delete invoice:', invoice);
-    
+
     // Show confirmation dialog
     if (confirm(`Are you sure you want to delete invoice ${invoice.invoice_number}?`)) {
       this.deleteInvoice(invoice);
@@ -228,7 +230,7 @@ export class InvoicePage {
    */
   private handleStatusChange(invoice: Invoice, newStatus: InvoiceStatus): void {
     console.log('Status change:', invoice.invoice_number, newStatus);
-    
+
     // Update invoice status
     this.updateInvoiceStatus(invoice, newStatus);
   }
@@ -249,11 +251,11 @@ export class InvoicePage {
    */
   private showSidebar(): void {
     this.state.sidebarVisible = true;
-    
+
     const sidebarContainer = this.container.querySelector('.sidebar-container') as HTMLElement;
     if (sidebarContainer) {
       sidebarContainer.style.display = 'block';
-      
+
       // Re-initialize sidebar if it was destroyed
       if (!this.sidebar) {
         this.sidebar = new Sidebar(sidebarContainer, {
@@ -270,7 +272,7 @@ export class InvoicePage {
    */
   private hideSidebar(): void {
     this.state.sidebarVisible = false;
-    
+
     const sidebarContainer = this.container.querySelector('.sidebar-container') as HTMLElement;
     if (sidebarContainer) {
       sidebarContainer.style.display = 'none';
@@ -289,25 +291,160 @@ export class InvoicePage {
    * Show create invoice modal
    */
   private showCreateInvoiceModal(): void {
-    // TODO: Implement create invoice modal
-    alert('Create Invoice Modal - To be implemented');
+    // Create a container for the modal
+    const modalContainer = document.createElement('div');
+    modalContainer.id = 'invoice-form-container';
+    document.body.appendChild(modalContainer);
+
+    const invoiceForm = new InvoiceForm({
+      container: modalContainer,
+      onSave: async (invoiceData: InvoiceFormData) => {
+        await this.saveNewInvoice(invoiceData);
+        modalContainer.remove();
+        this.refreshInvoiceList();
+      },
+      onCancel: () => {
+        modalContainer.remove();
+      }
+    });
+
+    invoiceForm.render();
   }
 
   /**
    * Show invoice detail modal
    */
   private showInvoiceDetailModal(invoice: Invoice): void {
-    // TODO: Implement invoice detail modal
-    alert(`Invoice Detail Modal for ${invoice.invoice_number} - To be implemented`);
+    // For now, show in edit mode read-only
+    this.showEditInvoiceModal(invoice);
   }
 
   /**
    * Show edit invoice modal
    */
   private showEditInvoiceModal(invoice: Invoice): void {
-    // TODO: Implement edit invoice modal
-    alert(`Edit Invoice Modal for ${invoice.invoice_number} - To be implemented`);
+    // Create a container for the modal
+    const modalContainer = document.createElement('div');
+    modalContainer.id = 'invoice-form-container';
+    document.body.appendChild(modalContainer);
+
+    // Convert invoice to form data
+    const formData: InvoiceFormData = {
+      invoice_id: invoice.invoice_id,
+      org_id: invoice.org_id,
+      invoice_date: new Date(invoice.invoice_date).toISOString().split('T')[0],
+      due_date: invoice.due_date ? new Date(invoice.due_date).toISOString().split('T')[0] : undefined,
+      status: invoice.status,
+      items: (invoice.invoice_items || []).map(item => ({
+        item_id: item.item_id,
+        item_name: item.item?.item_name || '',
+        quantity: item.quantity,
+        unit_price: item.unit_price,
+        gst_rate: item.item?.item_gst || 0,
+        total: item.item_total_amount,
+        gst_amount: item.item_gst_amount,
+        net_amount: item.item_net_amount
+      })),
+      notes: invoice.notes || undefined
+    };
+
+    const invoiceForm = new InvoiceForm({
+      container: modalContainer,
+      invoice: formData,
+      onSave: async (invoiceData: InvoiceFormData) => {
+        await this.updateInvoice(invoice, invoiceData);
+        modalContainer.remove();
+        this.refreshInvoiceList();
+      },
+      onCancel: () => {
+        modalContainer.remove();
+      }
+    });
+
+    invoiceForm.render();
   }
+
+  /**
+   * Save new invoice
+   */
+  private async saveNewInvoice(invoiceData: InvoiceFormData): Promise<void> {
+    try {
+      // Calculate totals
+      let totalAmount = 0;
+      let gstAmount = 0;
+
+      invoiceData.items.forEach(item => {
+        totalAmount += item.total;
+        gstAmount += item.gst_amount;
+      });
+
+      const result = await (window as any).electronAPI.createInvoice({
+        org_id: invoiceData.org_id,
+        invoice_date: invoiceData.invoice_date,
+        due_date: invoiceData.due_date || null,
+        status: invoiceData.status,
+        total_amount: totalAmount,
+        gst_amount: gstAmount,
+        net_amount: totalAmount + gstAmount,
+        notes: invoiceData.notes || null
+      });
+
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+
+      console.log('Invoice created successfully');
+    } catch (error) {
+      console.error('Error creating invoice:', error);
+      alert(`Failed to create invoice: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  /**
+   * Update existing invoice
+   */
+  private async updateInvoice(invoice: Invoice, invoiceData: InvoiceFormData): Promise<void> {
+    try {
+      // Calculate totals
+      let totalAmount = 0;
+      let gstAmount = 0;
+
+      invoiceData.items.forEach(item => {
+        totalAmount += item.total;
+        gstAmount += item.gst_amount;
+      });
+
+      const result = await (window as any).electronAPI.updateInvoice(invoice.invoice_id, {
+        org_id: invoiceData.org_id,
+        invoice_date: invoiceData.invoice_date,
+        due_date: invoiceData.due_date || null,
+        status: invoiceData.status,
+        total_amount: totalAmount,
+        gst_amount: gstAmount,
+        net_amount: totalAmount + gstAmount,
+        notes: invoiceData.notes || null
+      });
+
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+
+      console.log('Invoice updated successfully');
+    } catch (error) {
+      console.error('Error updating invoice:', error);
+      alert(`Failed to update invoice: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  /**
+   * Refresh invoice list
+   */
+  private refreshInvoiceList(): void {
+    if (this.invoiceList) {
+      this.invoiceList.render();
+    }
+  }
+
 
   /**
    * Delete invoice
@@ -315,12 +452,12 @@ export class InvoicePage {
   private async deleteInvoice(invoice: Invoice): Promise<void> {
     try {
       await this.invoiceService.deleteInvoice(invoice.invoice_id.toString());
-      
+
       // Update the invoice list
       if (this.invoiceList) {
         this.invoiceList.removeInvoice(invoice.invoice_id.toString());
       }
-      
+
       console.log(`Invoice ${invoice.invoice_number} deleted successfully`);
     } catch (error) {
       console.error('Error deleting invoice:', error);
@@ -336,12 +473,12 @@ export class InvoicePage {
       const updatedInvoice = await this.invoiceService.updateInvoice(invoice.invoice_id.toString(), {
         status: newStatus
       });
-      
+
       // Update the invoice list
       if (this.invoiceList) {
         this.invoiceList.updateInvoice(updatedInvoice);
       }
-      
+
       console.log(`Invoice ${invoice.invoice_number} status updated to ${newStatus}`);
     } catch (error) {
       console.error('Error updating invoice status:', error);
@@ -387,23 +524,23 @@ export class InvoicePage {
     // Remove event listeners
     document.removeEventListener('keydown', this.handleKeydown);
     window.removeEventListener('resize', this.handleResize);
-    
+
     // Destroy child components
     if (this.sidebar) {
       this.sidebar.destroy();
       this.sidebar = null;
     }
-    
+
     if (this.header) {
       this.header.destroy();
       this.header = null;
     }
-    
+
     if (this.invoiceList) {
       this.invoiceList.destroy();
       this.invoiceList = null;
     }
-    
+
     // Clear container
     this.container.innerHTML = '';
   }

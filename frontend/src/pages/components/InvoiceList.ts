@@ -175,31 +175,6 @@ export class InvoiceList {
    * Get invoice rows HTML
    */
   private getInvoiceRowsHTML(): string {
-    if (this.state.loading) {
-      return `
-        <tr class="loading-row">
-          <td colspan="8" class="loading-cell">
-            <div class="loading-spinner">⏳</div>
-            <span>Loading invoices...</span>
-          </td>
-        </tr>
-      `;
-    }
-
-    if (this.state.invoices.length === 0) {
-      return `
-        <tr class="empty-row">
-          <td colspan="8" class="empty-cell">
-            <div class="empty-state">
-              <div class="empty-icon">📄</div>
-              <h3>No invoices found</h3>
-              <p>Create your first invoice to get started</p>
-            </div>
-          </td>
-        </tr>
-      `;
-    }
-
     return this.state.invoices.map(invoice => 
       `<tr class="invoice-row-placeholder" data-invoice-id="${invoice.invoice_id}"></tr>`
     ).join('');
@@ -210,7 +185,7 @@ export class InvoiceList {
    */
   private getLoadingHTML(): string {
     return `
-      <div class="loading-overlay" style="display: ${this.state.loading ? 'block' : 'none'}">
+      <div class="loading-overlay" style="display: none;">
         <div class="loading-spinner">⏳</div>
         <p>Loading invoices...</p>
       </div>
@@ -222,10 +197,10 @@ export class InvoiceList {
    */
   private getErrorHTML(): string {
     return `
-      <div class="error-message" style="display: ${this.state.error ? 'block' : 'none'}">
+      <div class="error-message" style="display: none;">
         <div class="error-icon">⚠️</div>
         <h3>Error Loading Invoices</h3>
-        <p>${this.state.error}</p>
+        <p class="error-text"></p>
         <button class="retry-button" type="button">Retry</button>
       </div>
     `;
@@ -235,15 +210,11 @@ export class InvoiceList {
    * Get empty state HTML
    */
   private getEmptyStateHTML(): string {
-    if (this.state.invoices.length > 0 || this.state.loading || this.state.error) {
-      return '';
-    }
-
     return `
-      <div class="empty-state">
+      <div class="empty-state" style="display: none;">
         <div class="empty-icon">📄</div>
         <h3>No invoices yet</h3>
-        <p>Create your first invoice to get started with GST management</p>
+        <p class="empty-text">Create your first invoice to get started with GST management</p>
         <button class="create-first-invoice-btn" type="button">Create Invoice</button>
       </div>
     `;
@@ -311,6 +282,7 @@ export class InvoiceList {
   private async loadInvoices(): Promise<void> {
     console.log('InvoiceList: loadInvoices called with filters:', this.state.filters);
     this.setState({ loading: true, error: null });
+    this.updateUIState();
     
     try {
       console.log('InvoiceList: Calling invoiceService.getInvoices...');
@@ -320,12 +292,49 @@ export class InvoiceList {
       
       this.setState({ invoices, loading: false });
       this.renderInvoiceRows();
+      this.updateUIState();
     } catch (error) {
       console.error('InvoiceList: Error loading invoices:', error);
       this.setState({ 
         error: error instanceof Error ? error.message : 'Failed to load invoices',
         loading: false 
       });
+      this.updateUIState();
+    }
+  }
+
+  /**
+   * Update UI states for loading, error, and empty states
+   */
+  private updateUIState(): void {
+    const loadingOverlay = this.container.querySelector('.loading-overlay') as HTMLElement;
+    const errorMsg = this.container.querySelector('.error-message') as HTMLElement;
+    const emptyState = this.container.querySelector('.empty-state') as HTMLElement;
+    const tableContainer = this.container.querySelector('.invoice-table-container') as HTMLElement;
+
+    if (loadingOverlay) loadingOverlay.style.display = this.state.loading ? 'block' : 'none';
+    
+    if (errorMsg) {
+      errorMsg.style.display = this.state.error ? 'block' : 'none';
+      const text = errorMsg.querySelector('.error-text');
+      if (text) text.textContent = this.state.error || '';
+    }
+    
+    const showEmpty = !this.state.loading && !this.state.error && this.state.invoices.length === 0;
+    if (emptyState) {
+      emptyState.style.display = showEmpty ? 'block' : 'none';
+      const isSearchEmpty = this.state.searchTerm || Object.keys(this.state.filters).length > 0;
+      const h3 = emptyState.querySelector('h3');
+      const p = emptyState.querySelector('.empty-text');
+      const btn = emptyState.querySelector('.create-first-invoice-btn') as HTMLElement;
+      
+      if (h3) h3.textContent = isSearchEmpty ? 'No matching invoices' : 'No invoices yet';
+      if (p) p.textContent = isSearchEmpty ? 'Try adjusting your search or filters' : 'Create your first invoice to get started with GST management';
+      if (btn) btn.style.display = isSearchEmpty ? 'none' : 'inline-block';
+    }
+    
+    if (tableContainer) {
+      tableContainer.style.display = showEmpty ? 'none' : 'block';
     }
   }
 

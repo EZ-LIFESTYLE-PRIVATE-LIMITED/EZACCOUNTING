@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -26,7 +27,7 @@
             background: white;
             margin: 10px;
             border-radius: 10px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
         }
 
         .header {
@@ -98,7 +99,7 @@
 
         .feature-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
         }
 
         .feature-icon {
@@ -135,8 +136,13 @@
         }
 
         @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
         }
 
         .footer {
@@ -180,7 +186,7 @@
         .registration-card {
             background: white;
             border-radius: 15px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
             max-width: 600px;
             width: 100%;
             overflow: hidden;
@@ -431,6 +437,7 @@
         }
     </style>
 </head>
+
 <body>
     <div class="app-container">
         <div class="header">
@@ -475,7 +482,8 @@
                         View Records
                     </button>
                 </div>
-                <div id="db-results" style="margin-top: 15px; padding: 10px; background: #f8f9fa; border-radius: 5px; display: none;">
+                <div id="db-results"
+                    style="margin-top: 15px; padding: 10px; background: #f8f9fa; border-radius: 5px; display: none;">
                     <h4>Database Results:</h4>
                     <pre id="db-results-content"></pre>
                 </div>
@@ -499,7 +507,8 @@
                         </button>
                     </div>
                 </div>
-                <div id="config-results" style="margin-top: 15px; padding: 10px; background: #f8f9fa; border-radius: 5px; display: none;">
+                <div id="config-results"
+                    style="margin-top: 15px; padding: 10px; background: #f8f9fa; border-radius: 5px; display: none;">
                     <h4>Configuration Details:</h4>
                     <pre id="config-results-content"></pre>
                 </div>
@@ -543,7 +552,7 @@
             // Check if this is a registration page
             const urlParams = new URLSearchParams(window.location.search);
             const isRegistration = urlParams.get('registration') === 'true';
-            
+
             if (isRegistration) {
                 await showRegistrationPage();
             } else {
@@ -555,29 +564,25 @@
                     console.log('Showing registration page');
                     await showRegistrationPage();
                 } else {
-                    console.log('Showing home page');
-                    await showHomePage();
+                    console.log('Showing login page');
+                    await showLoginPage();
                 }
             }
         });
 
         async function showRegistrationPage() {
-            // Hide the main app container
-            const appContainer = document.querySelector('.app-container');
-            if (appContainer) {
-                appContainer.style.display = 'none';
-            }
-            
+            await cleanupAllPages();
+
             // Create registration container
             const registrationContainer = document.createElement('div');
             registrationContainer.id = 'registration-container';
             document.body.appendChild(registrationContainer);
-            
+
             // Use the proper TypeScript component
             console.log('Attempting to import RegistrationPage from: ../pages/RegistrationPage.js');
             console.log('Current location:', window.location.href);
             console.log('Current pathname:', window.location.pathname);
-            
+
             // Try different import paths - using the bundled RegistrationPage
             const possiblePaths = [
                 '../pages-bundled/RegistrationPage.js',
@@ -585,12 +590,12 @@
                 '/pages-bundled/RegistrationPage.js',
                 'file:///D:/Project/EZAccounting/frontend/dist/pages-bundled/RegistrationPage.js'
             ];
-            
+
             console.log('Will try these paths:', possiblePaths);
-            
+
             let RegistrationPage = null;
             let importError = null;
-            
+
             // Try each possible path
             for (const path of possiblePaths) {
                 try {
@@ -604,7 +609,7 @@
                     importError = error;
                 }
             }
-            
+
             if (RegistrationPage) {
                 try {
                     const registrationPage = new RegistrationPage(registrationContainer);
@@ -617,7 +622,7 @@
             } else {
                 console.error('Failed to import RegistrationPage from any path');
             }
-            
+
             if (importError) {
                 console.error('Failed to import RegistrationPage:', importError);
                 console.error('Error details:', {
@@ -625,7 +630,7 @@
                     stack: importError.stack,
                     name: importError.name
                 });
-                
+
                 // Fallback: show error message
                 registrationContainer.innerHTML = `
                     <div style="padding: 20px; color: red;">
@@ -637,19 +642,63 @@
             }
         }
 
+        async function showLoginPage() {
+            await cleanupAllPages();
+
+            const loginContainer = document.createElement('div');
+            loginContainer.id = 'login-container';
+            document.body.appendChild(loginContainer);
+
+            try {
+                const module = await import('../pages-bundled/LoginPage.js');
+                const loginPage = new module.LoginPage(loginContainer);
+                loginPage.render();
+                window.currentPage = loginPage;
+            } catch (error) {
+                console.error('Failed to load login page:', error);
+            }
+        }
+
+        async function showProfilePage() {
+            await cleanupAllPages();
+
+            const profilePageContainer = document.createElement('div');
+            profilePageContainer.id = 'profile-page-container';
+            document.body.appendChild(profilePageContainer);
+
+            try {
+                const { ProfilePage } = await import('../pages-bundled/ProfilePage.js');
+                const profilePage = new ProfilePage({
+                    container: profilePageContainer,
+                    showSidebar: true,
+                    onNavigate: handleNavigation
+                });
+                await profilePage.render();
+                window.currentPage = profilePage;
+            } catch (error) {
+                console.error('Failed to load ProfilePage:', error);
+            }
+        }
+
         async function showHomePage() {
             // Show the main app container
             const appContainer = document.querySelector('.app-container');
             if (appContainer) {
                 appContainer.style.display = 'flex';
             }
-            
+
             // Remove registration container if it exists
             const registrationContainer = document.getElementById('registration-container');
             if (registrationContainer) {
                 registrationContainer.remove();
             }
-            
+
+            // Remove invoice page container if it exists
+            const invoicePageContainer = document.getElementById('invoice-page-container');
+            if (invoicePageContainer) {
+                invoicePageContainer.remove();
+            }
+
             // Initialize home page
             checkBackendConnection();
             checkDatabaseConnection();
@@ -657,61 +706,202 @@
         }
 
         async function showInvoicePage() {
-            // Hide the main app container
-            const appContainer = document.querySelector('.app-container');
-            if (appContainer) {
-                appContainer.style.display = 'none';
-            }
-            
-            // Remove registration container if it exists
-            const registrationContainer = document.getElementById('registration-container');
-            if (registrationContainer) {
-                registrationContainer.remove();
-            }
-            
-            // Create invoice page container
+            await cleanupAllPages();
+
             const invoicePageContainer = document.createElement('div');
             invoicePageContainer.id = 'invoice-page-container';
             document.body.appendChild(invoicePageContainer);
-            
+
             try {
-                // Import components
                 const { InvoicePage } = await import('../pages-bundled/InvoicePage.js');
                 const { InvoiceService } = await import('../pages-bundled/InvoiceService.js');
-                
-                // Initialize invoice service with database
+
                 const invoiceService = new InvoiceService({ dataSource: 'database' });
-                
-                // Create and render invoice page
+
                 const invoicePage = new InvoicePage({
                     container: invoicePageContainer,
                     invoiceService: invoiceService,
                     showSidebar: true,
-                    onNavigate: (path) => {
-                        console.log('Navigate to:', path);
-                        // Handle navigation here
-                    }
+                    onNavigate: handleNavigation
                 });
-                
+
                 invoicePage.render();
-                console.log('InvoicePage rendered successfully');
-                
-                // Store reference for cleanup
-                window.currentInvoicePage = invoicePage;
-                
+                window.currentPage = invoicePage;
+
             } catch (error) {
                 console.error('Failed to load InvoicePage:', error);
                 invoicePageContainer.innerHTML = `
                     <div style="padding: 40px; text-align: center; color: #dc2626;">
                         <h2>Error Loading Invoice Page</h2>
-                        <p>Failed to load invoice management interface: ${error.message}</p>
-                        <button onclick="showHomePage()" style="margin-top: 20px; padding: 10px 20px; background: #3b82f6; color: white; border: none; border-radius: 6px; cursor: pointer;">
-                            Back to Dashboard
-                        </button>
+                        <p>${error.message}</p>
                     </div>
                 `;
             }
         }
+
+        async function showItemsPage() {
+            await cleanupAllPages();
+
+            const itemsPageContainer = document.createElement('div');
+            itemsPageContainer.id = 'items-page-container';
+            document.body.appendChild(itemsPageContainer);
+
+            try {
+                const { ItemsPage } = await import('../pages-bundled/ItemsPage.js');
+
+                const itemsPage = new ItemsPage({
+                    container: itemsPageContainer,
+                    showSidebar: true,
+                    onNavigate: handleNavigation
+                });
+
+                await itemsPage.render();
+                window.currentPage = itemsPage;
+
+            } catch (error) {
+                console.error('Failed to load ItemsPage:', error);
+                itemsPageContainer.innerHTML = `
+                    <div style="padding: 40px; text-align: center; color: #dc2626;">
+                        <h2>Error Loading Items Page</h2>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        async function showVendorsPage() {
+            await cleanupAllPages();
+
+            const vendorsPageContainer = document.createElement('div');
+            vendorsPageContainer.id = 'vendors-page-container';
+            document.body.appendChild(vendorsPageContainer);
+
+            try {
+                const { VendorsPage } = await import('../pages-bundled/VendorsPage.js');
+
+                const vendorsPage = new VendorsPage({
+                    container: vendorsPageContainer,
+                    showSidebar: true,
+                    onNavigate: handleNavigation
+                });
+
+                await vendorsPage.render();
+                window.currentPage = vendorsPage;
+
+            } catch (error) {
+                console.error('Failed to load VendorsPage:', error);
+                vendorsPageContainer.innerHTML = `
+                    <div style="padding: 40px; text-align: center; color: #dc2626;">
+                        <h2>Error Loading Vendors Page</h2>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        async function showPurchasesPage() {
+            await cleanupAllPages();
+
+            const purchasesPageContainer = document.createElement('div');
+            purchasesPageContainer.id = 'purchases-page-container';
+            document.body.appendChild(purchasesPageContainer);
+
+            try {
+                const { PurchasesPage } = await import('../pages-bundled/PurchasesPage.js');
+
+                const purchasesPage = new PurchasesPage({
+                    container: purchasesPageContainer,
+                    showSidebar: true,
+                    onNavigate: handleNavigation
+                });
+
+                await purchasesPage.render();
+                window.currentPage = purchasesPage;
+
+            } catch (error) {
+                console.error('Failed to load PurchasesPage:', error);
+                purchasesPageContainer.innerHTML = `
+                    <div style="padding: 40px; text-align: center; color: #dc2626;">
+                        <h2>Error Loading Purchases Page</h2>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        async function cleanupAllPages() {
+            // Hide main app container
+            const appContainer = document.querySelector('.app-container');
+            if (appContainer) {
+                appContainer.style.display = 'none';
+            }
+
+            // Cleanup current page if exists
+            if (window.currentPage && typeof window.currentPage.destroy === 'function') {
+                window.currentPage.destroy();
+                window.currentPage = null;
+            }
+
+            // Also cleanup old reference
+            if (window.currentInvoicePage && typeof window.currentInvoicePage.destroy === 'function') {
+                window.currentInvoicePage.destroy();
+                window.currentInvoicePage = null;
+            }
+
+            // Remove all page containers
+            const containers = [
+                'registration-container',
+                'login-container',
+                'profile-page-container',
+                'invoice-page-container',
+                'items-page-container',
+                'vendors-page-container',
+                'purchases-page-container'
+            ];
+
+            containers.forEach(id => {
+                const container = document.getElementById(id);
+                if (container) container.remove();
+            });
+        }
+
+        function handleNavigation(path) {
+            console.log('Navigation to:', path);
+
+            switch (path) {
+                case '/invoices':
+                    showInvoicePage();
+                    break;
+                case '/items':
+                    showItemsPage();
+                    break;
+                case '/vendors':
+                    showVendorsPage();
+                    break;
+                case '/purchases':
+                    showPurchasesPage();
+                    break;
+                case '/profile':
+                    showProfilePage();
+                    break;
+                case '/logout':
+                    // Swap directly to login without forcing a heavy Chromium reload
+                    if (window.electronAPI && window.electronAPI.logout) {
+                        window.electronAPI.logout().then(() => {
+                            showLoginPage();
+                        });
+                    } else {
+                        showLoginPage();
+                    }
+                    break;
+                case '/gst-report':
+                    alert('GST Report feature coming soon!');
+                    break;
+                default:
+                    console.log('Unknown path:', path);
+            }
+        }
+
 
         // Registration form is now handled by the RegistrationPage component
 
@@ -728,7 +918,7 @@
 
             try {
                 const result = await window.electronAPI.checkBackendConnection();
-                
+
                 if (result.connected) {
                     statusIndicator.className = 'status-indicator status-connected';
                     statusText.textContent = `Backend connected successfully (Uptime: ${Math.floor(result.data.uptime)}s)`;
@@ -760,7 +950,7 @@
 
             try {
                 const isConnected = await window.electronAPI.dbIsConnected();
-                
+
                 if (isConnected) {
                     statusIndicator.className = 'status-indicator status-connected';
                     statusText.textContent = 'SQLite database connected successfully';
@@ -788,7 +978,7 @@
             try {
                 // Get database info
                 const dbInfo = await window.electronAPI.dbGetDatabaseInfo();
-                
+
                 if (dbInfo.success) {
                     resultsContent.textContent = JSON.stringify({
                         databaseInfo: dbInfo.info,
@@ -819,7 +1009,7 @@
                     `Test Record ${timestamp}`,
                     `Value ${Math.random().toString(36).substr(2, 9)}`
                 );
-                
+
                 if (result.success) {
                     resultsContent.textContent = JSON.stringify({
                         message: 'Test record added successfully!',
@@ -847,7 +1037,7 @@
 
             try {
                 const result = await window.electronAPI.dbGetTestRecords();
-                
+
                 if (result.success) {
                     resultsContent.textContent = JSON.stringify({
                         message: 'Test records retrieved successfully!',
@@ -868,7 +1058,7 @@
         async function loadConfigurationInfo() {
             try {
                 const config = await window.electronAPI.getConfigInfo();
-                
+
                 document.getElementById('backend-url-display').textContent = config.backendUrl;
                 document.getElementById('db-path-display').textContent = config.databasePath;
                 document.getElementById('user-data-display').textContent = config.userDataPath;
@@ -891,7 +1081,7 @@
 
             try {
                 const config = await window.electronAPI.getConfigInfo();
-                
+
                 resultsContent.textContent = JSON.stringify({
                     message: 'Configuration loaded successfully!',
                     configuration: {
@@ -922,8 +1112,23 @@
                 showBtn.disabled = false;
             }
         }
+
+        // --- DEBUG CLICK TRACER ---
+        document.addEventListener('click', (e) => {
+            console.log('[DEBUG] Clicked on:', e.target.tagName, 
+                        'id=' + e.target.id, 
+                        'class=' + e.target.className);
+            
+            // Log active modal overlays if any
+            const containers = document.querySelectorAll('div');
+            containers.forEach(c => {
+                const style = window.getComputedStyle(c);
+                if (style.zIndex && parseInt(style.zIndex) > 100 && style.display !== 'none') {
+                    console.log('[DEBUG] Potential overlay found:', c.id || c.className, 'z-index:', style.zIndex);
+                }
+            });
+        }, true);
     </script>
 </body>
+
 </html>
-
-
